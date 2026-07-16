@@ -4,8 +4,9 @@ import { WEAVER_NAV } from "@/components/nav";
 import ProductActions from "./ProductActions";
 import { getSession } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
-import { Product, ProvenanceEvent, Claim } from "@/lib/models";
+import { Product, ProvenanceEvent, Claim, MaterialLot } from "@/lib/models";
 import { mediaUrl } from "@/lib/storage";
+import MaterialsPanel from "./MaterialsPanel";
 import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
@@ -30,6 +31,7 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
   const claim = product?.authenticity?.claimedByConsumer
     ? await Claim.findOne({ productId: product._id, status: "CLAIMED" }).sort({ claimedAt: -1 }).lean<Record<string, any> | null>()
     : null;
+  const lots = await MaterialLot.find({ weaverId: product.weaverId, remainingGrams: { $gt: 0 } }).sort({ createdAt: -1 }).lean<Record<string, any>[]>();
 
   return (
     <PortalShell title="Weaver" nav={nav} userName={session?.name}>
@@ -67,6 +69,29 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
                 </li>
               ))}
             </ol>
+          </div>
+
+          <div className="mt-5">
+            <MaterialsPanel
+              productId={String(product._id)}
+              frozen={!!product.passport?.frozen}
+              linked={(product.materials || []).map((m: Record<string, any>) => ({
+                lotIdLabel: m.lotIdLabel,
+                type: m.type,
+                role: m.role,
+                quantityGrams: m.quantityGrams,
+                supplierName: m.supplierName,
+                isHankYarn: m.isHankYarn,
+              }))}
+              lots={lots.map((l) => ({
+                _id: String(l._id),
+                lotId: l.lotId,
+                type: l.type,
+                remainingGrams: l.remainingGrams ?? 0,
+                colour: l.spec?.colour,
+                isHankYarn: l.spec?.isHankYarn,
+              }))}
+            />
           </div>
         </div>
 

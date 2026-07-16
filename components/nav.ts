@@ -1,6 +1,7 @@
 export const WEAVER_NAV = [
   { href: "/w/dashboard", label: "My work", icon: "home" },
   { href: "/w/register", label: "Register a piece", icon: "plus" },
+  { href: "/w/materials", label: "My materials", icon: "spool" },
   { href: "/w/insights", label: "Who saw my work", icon: "chart" },
 ];
 

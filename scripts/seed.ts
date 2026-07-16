@@ -19,12 +19,13 @@ import mongoose from "mongoose";
 import { dbConnect } from "../lib/db";
 import {
   Organization, User, Weaver, Product, Tag, Scan, ProvenanceEvent, Claim,
-  Certificate, FraudReport, MediaAsset, LedgerEntry, AuditLog,
+  Certificate, FraudReport, MediaAsset, LedgerEntry, AuditLog, MaterialLot,
 } from "../lib/models";
 import { sha256, randomHex, canonicalHash } from "../lib/hash";
 import { appendLedgerEntry } from "../lib/ledger";
 import { issuePassport, freezePassport } from "../lib/passport";
 import { recordProvenanceEvent } from "../lib/provenance";
+import { registerMaterialLot, computeMaterialHash } from "../lib/materials";
 import { saveMedia } from "../lib/storage";
 import { scanId as makeScanId } from "../lib/ids";
 
@@ -87,7 +88,7 @@ async function main() {
   await dbConnect();
   console.log("Connected. Wiping collections…");
   await Promise.all(
-    [Organization, User, Weaver, Product, Tag, Scan, ProvenanceEvent, Claim, Certificate, FraudReport, MediaAsset, LedgerEntry, AuditLog].map((M) =>
+    [Organization, User, Weaver, Product, Tag, Scan, ProvenanceEvent, Claim, Certificate, FraudReport, MediaAsset, LedgerEntry, AuditLog, MaterialLot].map((M) =>
       M.deleteMany({})
     )
   );
@@ -200,6 +201,36 @@ async function main() {
 
     await User.create({ phone: d.phone, name: d.fullName, role: "WEAVER", orgId: coop._id, weaverId: w._id, locale: d.lang });
     weavers[d.handle] = w;
+  }
+
+  /* ── Material lots (weaver-owned, FR-B1) ── */
+  const lots: Record<string, Record<string, InstanceType<typeof MaterialLot>>> = {};
+  async function lotFor(handle: string, key: string, opts: Parameters<typeof registerMaterialLot>[0]) {
+    const lot = await registerMaterialLot(opts);
+    (lots[handle] ??= {})[key] = lot;
+  }
+  for (const [handle, w] of Object.entries(weavers)) {
+    if (w.verification?.status !== "VERIFIED") continue;
+    const base = { weaverId: String(w._id), orgId: String(coop._id) };
+    const silk = w.profile.crafts[0].code !== 11; // not plain cotton
+    if (silk) {
+      await lotFor(handle, "silk", { ...base, type: "SILK_YARN", supplierName: "Karur Silk Traders", colour: "Undyed mulberry", denier: 20, ply: 2, certification: "SILK_MARK", isHankYarn: true, quantityGrams: 6000 });
+      await lotFor(handle, "zari", { ...base, type: "ZARI", supplierName: "Surat Zari House", colour: "Gold", certification: "NONE", quantityGrams: 2500 });
+    } else {
+      await lotFor(handle, "cotton", { ...base, type: "COTTON_YARN", supplierName: "Erode Cotton Co-op", colour: "Undyed", denier: 40, ply: 2, certification: "HANDLOOM_HANK", isHankYarn: true, quantityGrams: 4000 });
+    }
+    await lotFor(handle, "dye", { ...base, type: "DYE", supplierName: w.personal.address.district + " Dyers", certification: "AZO_FREE", dyeChemistry: "Natural indigo & madder", quantityGrams: 1500 });
+  }
+
+  async function attachMaterial(product: InstanceType<typeof Product>, lot: InstanceType<typeof MaterialLot>, role: string, grams: number) {
+    if (!lot || (lot.remainingGrams ?? 0) < grams) return;
+    lot.remainingGrams -= grams;
+    await lot.save();
+    product.materials.push({
+      materialLotId: lot._id, lotIdLabel: lot.lotId, type: lot.type, role, quantityGrams: grams,
+      supplierName: lot.supplier?.name, certification: lot.spec?.certification, isHankYarn: lot.spec?.isHankYarn,
+      materialHash: lot.ledger?.materialHash, linkedAt: new Date(),
+    });
   }
 
   /* ── Products ── */
@@ -336,6 +367,23 @@ async function main() {
       e.occurredAt = daysAgo(d);
       await e.save();
     }
+
+    // Link the weaver's own material lots (FR-B2)
+    const wl = lots[def.weaver] || {};
+    const warpG = Math.round((def.specs.weightGrams as number) * 0.5) || 300;
+    const weftG = Math.round((def.specs.weightGrams as number) * 0.45) || 280;
+    if (wl.silk) {
+      await attachMaterial(product, wl.silk, "WARP", warpG);
+      await attachMaterial(product, wl.silk, "WEFT", weftG);
+    }
+    if (wl.cotton) {
+      await attachMaterial(product, wl.cotton, "WARP", warpG);
+      await attachMaterial(product, wl.cotton, "WEFT", weftG);
+    }
+    if (wl.zari && def.specs.zariGrams) await attachMaterial(product, wl.zari, "ZARI", def.specs.zariGrams as number);
+    if (wl.dye) await attachMaterial(product, wl.dye, "DYE", 40);
+    product.materialHash = computeMaterialHash(product.materials);
+    await product.save();
 
     // Issue passport (ledger + tag secret)
     const issued = await issuePassport(String(product._id));

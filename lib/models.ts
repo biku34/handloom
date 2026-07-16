@@ -125,28 +125,30 @@ const WeaverSchema = new Schema(
 WeaverSchema.index({ orgId: 1, "verification.status": 1 });
 WeaverSchema.index({ "profile.cluster.code": 1 });
 
-/* ── materials ── */
+/* ── materials (weaver-owned yarn / zari / dye lots) ── */
 const MaterialLotSchema = new Schema(
   {
     lotId: { type: String, unique: true },
-    type: { type: String, enum: ["SILK_YARN", "COTTON_YARN", "ZARI", "DYE"], required: true },
+    type: { type: String, enum: ["SILK_YARN", "COTTON_YARN", "WOOL_YARN", "ZARI", "DYE"], required: true },
     supplier: { name: String, gstin: String },
     spec: {
       denier: Number,
       ply: Number,
       colour: String,
-      certification: String,
+      certification: String, // SILK_MARK | HANDLOOM_HANK | AZO_FREE | ORGANIC | NONE
       dyeChemistry: String,
-      isHankYarn: Boolean,
+      isHankYarn: Boolean, // legally reserved for handloom — a real authenticity signal
     },
     quantity: { value: Number, unit: { type: String, default: "GRAMS" } },
     remainingGrams: Number,
     receivedAt: Date,
+    weaverId: { type: Types.ObjectId, ref: "Weaver" }, // the lot belongs to the weaver
     orgId: { type: Types.ObjectId, ref: "Organization" },
     ledger: { materialHash: String, entrySeq: Number },
   },
   { timestamps: true }
 );
+MaterialLotSchema.index({ weaverId: 1, createdAt: -1 });
 
 /* ── products ── */
 const ProductSchema = new Schema(
@@ -175,7 +177,21 @@ const ProductSchema = new Schema(
       production: { startedAt: Date, completedAt: Date, loomHours: Number, weaverCount: Number },
       priceRange: { min: Number, max: Number, currency: { type: String, default: "INR" } },
     },
-    materials: [{ materialLotId: { type: Types.ObjectId, ref: "MaterialLot" }, role: String, quantityGrams: Number }],
+    materials: [
+      {
+        materialLotId: { type: Types.ObjectId, ref: "MaterialLot" },
+        lotIdLabel: String, // denormalised for display without a join
+        type: { type: String }, // wrapped so Mongoose treats "type" as a field name, not the type keyword
+        role: { type: String, enum: ["WARP", "WEFT", "ZARI", "DYE"] },
+        quantityGrams: Number,
+        supplierName: String,
+        certification: String,
+        isHankYarn: Boolean,
+        materialHash: String,
+        linkedAt: Date,
+      },
+    ],
+    materialHash: String, // sha256 over sorted linked-lot hashes (FR-B2 commitment)
     media: {
       primaryAssetId: { type: Types.ObjectId, ref: "MediaAsset" },
       gallery: [{ type: Types.ObjectId, ref: "MediaAsset" }],
@@ -329,8 +345,9 @@ const ClaimSchema = new Schema(
   {
     productId: { type: Types.ObjectId, ref: "Product" },
     passportId: String,
-    claimantEmail: String,
     claimantName: String,
+    claimantPhone: String, // normalised 10-digit — the key for the public "my purchases" lookup
+    claimantEmail: String,
     method: { type: String, enum: ["SCRATCH_SECRET", "RETAILER_ISSUED"], default: "SCRATCH_SECRET" },
     scanId: String,
     status: { type: String, default: "CLAIMED" },
@@ -338,6 +355,7 @@ const ClaimSchema = new Schema(
   },
   { timestamps: true }
 );
+ClaimSchema.index({ claimantPhone: 1, claimedAt: -1 });
 
 /* ── certificates ── */
 const CertificateSchema = new Schema(

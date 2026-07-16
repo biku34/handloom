@@ -55,6 +55,7 @@ export default async function ProofPage({ params }: { params: Promise<{ passport
           ["Issue entry", view.proof.entrySeq != null ? `#${view.proof.entrySeq}` : "pending"],
           ["Record hash", view.proof.recordHash || "—"],
           ["Media hash", view.proof.mediaHash || "—"],
+          ["Material hash", view.proof.materialHash || "—"],
           ["Sealed", view.proof.sealed ? `Yes — ${new Date(view.proof.sealedAt!).toLocaleString("en-IN")}` : "Not yet (seals at dispatch)"],
         ].map(([k, v]) => (
           <div key={String(k)} className="px-5 py-3 grid grid-cols-[110px_1fr] gap-3 text-sm">

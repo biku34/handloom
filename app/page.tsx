@@ -88,6 +88,22 @@ export default async function LandingPage() {
           </div>
         </section>
 
+        {/* Owner lookup entry point */}
+        <section className="mx-auto max-w-5xl px-4 pb-4">
+          <div className="card overflow-hidden sm:flex items-center justify-between gap-6 p-6 sm:p-8">
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-[0.25em] text-silk-700">Already own a SUTRA piece?</p>
+              <h2 className="font-display mt-1.5 text-2xl font-bold text-maroon-900">See everything you&apos;ve bought</h2>
+              <p className="mt-2 text-sm text-stone-600 max-w-md">
+                Enter the phone number you claimed with — no account, no login — and revisit every piece and its story.
+              </p>
+            </div>
+            <Link href="/purchases" className="btn-primary mt-4 sm:mt-0 shrink-0 text-base px-6 py-3">
+              Find my purchases →
+            </Link>
+          </div>
+        </section>
+
         {/* Honest positioning (P4) */}
         <section className="bg-silk-100 border-y border-silk-200">
           <div className="mx-auto max-w-3xl px-4 py-10 text-center">

@@ -62,6 +62,13 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
   arrow: <path d="M5 12h14M13 6l6 6-6 6" />,
+  spool: (
+    <>
+      <rect x="6" y="3.5" width="12" height="17" rx="2" />
+      <path d="M6 7.5h12M6 16.5h12" />
+      <path d="M9 7.5c1.5 2 1.5 7 0 9M15 7.5c-1.5 2-1.5 7 0 9" />
+    </>
+  ),
   seal: (
     <>
       <rect x="5" y="11" width="14" height="9" rx="2" />

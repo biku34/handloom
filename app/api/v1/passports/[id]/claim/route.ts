@@ -18,6 +18,12 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const secret = String(body.secret || "").trim().toUpperCase();
   const email = String(body.email || "").trim().slice(0, 120);
   const name = String(body.name || "").trim().slice(0, 80);
+  const phoneRaw = String(body.phone || "").replace(/[\s+()-]/g, "");
+  const phone = phoneRaw.replace(/\D/g, "").slice(-10);
+
+  // Name and phone are mandatory (the phone powers the public purchases lookup).
+  if (name.length < 2) return NextResponse.json({ title: "Please enter your name", status: 400 }, { status: 400 });
+  if (!/^\d{10}$/.test(phone)) return NextResponse.json({ title: "Please enter a valid 10-digit phone number", status: 400 }, { status: 400 });
 
   const product = await Product.findOne({ passportId: id });
   if (!product) return NextResponse.json({ title: "Unknown passport", status: 404 }, { status: 404 });
@@ -70,8 +76,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   await Claim.create({
     productId: product._id,
     passportId: id,
+    claimantName: name,
+    claimantPhone: phone,
     claimantEmail: email || undefined,
-    claimantName: name || undefined,
     method: "SCRATCH_SECRET",
     scanId: body.scanId,
     status: "CLAIMED",
@@ -80,7 +87,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   product.authenticity.claimedByConsumer = true;
   product.authenticity.claimedAt = new Date();
   product.custody.currentHolderType = "CONSUMER";
-  product.custody.currentHolderName = name || "Consumer";
+  product.custody.currentHolderName = name;
   product.custody.since = new Date();
   await product.save();
 

@@ -5,9 +5,12 @@ import { useState } from "react";
 export default function ClaimForm({ passportId }: { passportId: string }) {
   const [secret, setSecret] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<{ kind: "ok" | "clone" | "error"; title: string; detail?: string; reportRef?: string } | null>(null);
+  const phoneDigits = phone.replace(/\D/g, "");
+  const canSubmit = secret.length >= 8 && name.trim().length >= 2 && phoneDigits.length >= 10;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -17,7 +20,7 @@ export default function ClaimForm({ passportId }: { passportId: string }) {
       const res = await fetch(`/api/v1/passports/${passportId}/claim`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ secret, name, email }),
+        body: JSON.stringify({ secret, name, phone, email }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -72,14 +75,27 @@ export default function ClaimForm({ passportId }: { passportId: string }) {
         <p className="mt-1.5 text-xs text-stone-500">Gently scratch the silver panel on the tag to reveal your 8-character code.</p>
       </div>
       <div>
-        <label className="label" htmlFor="name">Your name (optional)</label>
-        <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="So the weaver knows who treasures their work" />
+        <label className="label" htmlFor="name">Your name <span className="text-maroon-700">*</span></label>
+        <input id="name" className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="So the weaver knows who treasures their work" required />
+      </div>
+      <div>
+        <label className="label" htmlFor="phone">Your phone number <span className="text-maroon-700">*</span></label>
+        <input
+          id="phone"
+          className="input"
+          inputMode="numeric"
+          value={phone}
+          onChange={(e) => setPhone(e.target.value)}
+          placeholder="10-digit mobile number"
+          required
+        />
+        <p className="mt-1.5 text-xs text-stone-500">Use this number later to look up everything you&apos;ve bought.</p>
       </div>
       <div>
         <label className="label" htmlFor="email">Email (optional)</label>
         <input id="email" type="email" className="input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="For your ownership record" />
       </div>
-      <button className="btn-green w-full" disabled={busy || secret.length < 8}>
+      <button className="btn-green w-full" disabled={busy || !canSubmit}>
         {busy ? "Checking…" : "Claim ownership"}
       </button>
     </form>

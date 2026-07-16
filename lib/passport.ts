@@ -206,6 +206,15 @@ export async function buildPassportView(passportId: string) {
       giTag: product.item?.giTag,
     },
     certificates: certs.map((c) => ({ type: c.type, number: c.number, issuedBy: c.issuedBy, verified: c.status === "VALID" })),
+    materials: (product.materials || []).map((m: Record<string, any>) => ({
+      role: m.role,
+      type: m.type,
+      lotId: m.lotIdLabel,
+      grams: m.quantityGrams,
+      supplier: m.supplierName,
+      certification: m.certification && m.certification !== "NONE" ? m.certification : null,
+      isHankYarn: !!m.isHankYarn,
+    })),
     journey: {
       stepCount: events.length,
       firstEventAt: events[0]?.occurredAt || null,
@@ -228,6 +237,7 @@ export async function buildPassportView(passportId: string) {
       entrySeq: product.passport?.entrySeq ?? null,
       recordHash: product.passport?.recordHash ?? null,
       mediaHash: product.media?.mediaHash ?? null,
+      materialHash: product.materialHash ?? null,
       sealed: !!product.passport?.frozen,
       sealedAt: product.passport?.frozenAt ?? null,
     },

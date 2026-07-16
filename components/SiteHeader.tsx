@@ -11,6 +11,7 @@ export default function SiteHeader() {
         <nav className="flex items-center gap-4 text-sm">
           <Link href="/explore" className="hover:text-white">Explore</Link>
           <Link href="/verify" className="hover:text-white">Verify a tag</Link>
+          <Link href="/purchases" className="hover:text-white">My purchases</Link>
           <Link href="/login" className="rounded-lg bg-silk-200 text-maroon-900 px-3 py-1.5 font-semibold hover:bg-silk-300">Sign in</Link>
         </nav>
       </div>

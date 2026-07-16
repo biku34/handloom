@@ -65,7 +65,8 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
     );
   }
 
-  const { verdict, weaver, product, certificates, journey, ownership } = view;
+  const { verdict, weaver, product, certificates, journey, ownership, materials } = view;
+  const MAT_TYPE: Record<string, string> = { SILK_YARN: "Silk yarn", COTTON_YARN: "Cotton yarn", WOOL_YARN: "Wool yarn", ZARI: "Zari", DYE: "Dye" };
   const heroImage = product.images.primary || product.images.onLoom;
 
   return (
@@ -168,6 +169,39 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
           </dl>
         )}
       </section>
+
+      {/* 4b — traceable materials (FR-B2) */}
+      {materials.length > 0 && (
+        <section className="card mt-5 p-5">
+          <h2 className="font-display text-lg font-bold text-maroon-900">Traceable materials</h2>
+          <p className="mt-1 text-xs text-stone-500">The very threads this piece was woven from — sourced and recorded by the weaver.</p>
+          <ul className="mt-4 space-y-2.5">
+            {materials.map((m: { role: string; type: string; lotId?: string; grams?: number; supplier?: string; certification?: string | null; isHankYarn?: boolean }, i: number) => (
+              <li key={i} className="flex items-start gap-3">
+                <span className="mt-0.5 rounded-md bg-maroon-700/10 text-maroon-800 px-2 py-0.5 text-[10px] font-bold tracking-wide">{m.role}</span>
+                <div className="min-w-0 flex-1">
+                  <p className="text-sm font-semibold text-maroon-900">
+                    {MAT_TYPE[m.type] || m.type}
+                    {m.grams ? <span className="font-normal text-stone-500"> · {m.grams} g</span> : null}
+                  </p>
+                  <p className="text-xs text-stone-500">
+                    {[m.supplier, m.lotId].filter(Boolean).join(" · ")}
+                  </p>
+                </div>
+                <div className="flex flex-col items-end gap-1 shrink-0">
+                  {m.isHankYarn && <span className="rounded-full bg-leaf-600/10 text-leaf-700 border border-leaf-600/25 px-2 py-0.5 text-[10px] font-bold">Hank yarn</span>}
+                  {m.certification && <span className="rounded-full bg-silk-100 border border-silk-300 text-maroon-800 px-2 py-0.5 text-[10px] font-bold">{m.certification.replace(/_/g, " ")}</span>}
+                </div>
+              </li>
+            ))}
+          </ul>
+          {materials.some((m: { isHankYarn?: boolean }) => m.isHankYarn) && (
+            <p className="mt-4 rounded-lg bg-silk-50 border border-silk-200 px-3 py-2 text-[11px] leading-relaxed text-stone-600">
+              Hank yarn is reserved by law for the handloom sector — its presence is a genuine signal that this piece was hand-woven, not power-loomed.
+            </p>
+          )}
+        </section>
+      )}
 
       {/* 5 — deeper paths */}
       <nav className="mt-5 space-y-2.5">
