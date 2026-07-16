@@ -8,6 +8,40 @@ type Product = Record<string, any>;
 const ZARI_TYPES = ["", "PURE_SILVER_GOLD_PLATED", "PURE_SILVER", "TESTED_ZARI", "IMITATION_ZARI"];
 const DYE_TYPES = ["", "NATURAL", "VEGETABLE", "AZO_FREE_CHEMICAL"];
 
+/* Module-level so they keep a stable identity across renders — defining these
+   inside the component would remount every input on each keystroke (focus loss). */
+function Section({ title, children }: { title: string; children: React.ReactNode }) {
+  return (
+    <div className="border-t border-silk-200 pt-4">
+      <p className="text-xs font-bold uppercase tracking-[0.15em] text-silk-700">{title}</p>
+      <div className="mt-3 grid sm:grid-cols-2 gap-3">{children}</div>
+    </div>
+  );
+}
+
+function Field({
+  label,
+  value,
+  onChange,
+  placeholder,
+  wide,
+  inputMode,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  placeholder?: string;
+  wide?: boolean;
+  inputMode?: "numeric" | "text";
+}) {
+  return (
+    <div className={wide ? "sm:col-span-2" : ""}>
+      <label className="label">{label}</label>
+      <input className="input" value={value} inputMode={inputMode} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+    </div>
+  );
+}
+
 export default function EnrichForm({ productId, product, frozen }: { productId: string; product: Product; frozen: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
@@ -100,19 +134,6 @@ export default function EnrichForm({ productId, product, frozen }: { productId: 
     );
   }
 
-  const Section = ({ title, children }: { title: string; children: React.ReactNode }) => (
-    <div className="border-t border-silk-200 pt-4">
-      <p className="text-xs font-bold uppercase tracking-[0.15em] text-silk-700">{title}</p>
-      <div className="mt-3 grid sm:grid-cols-2 gap-3">{children}</div>
-    </div>
-  );
-  const Field = ({ label, k, placeholder, wide }: { label: string; k: keyof typeof f; placeholder?: string; wide?: boolean }) => (
-    <div className={wide ? "sm:col-span-2" : ""}>
-      <label className="label">{label}</label>
-      <input className="input" value={String(f[k])} onChange={(e) => set(k, e.target.value)} placeholder={placeholder} />
-    </div>
-  );
-
   return (
     <form onSubmit={submit} className="card p-5 space-y-4">
       <div className="flex items-center justify-between">
@@ -128,22 +149,22 @@ export default function EnrichForm({ productId, product, frozen }: { productId: 
       </div>
 
       <Section title="Dimensions & weight">
-        <Field label="Length (cm)" k="lengthCm" placeholder="e.g. 630" />
-        <Field label="Width (cm)" k="widthCm" placeholder="e.g. 118" />
-        <Field label="Weight (g)" k="weightGrams" placeholder="e.g. 720" />
+        <Field label="Length (cm)" value={f.lengthCm} onChange={(v) => set("lengthCm", v)} placeholder="e.g. 630" inputMode="numeric" />
+        <Field label="Width (cm)" value={f.widthCm} onChange={(v) => set("widthCm", v)} placeholder="e.g. 118" inputMode="numeric" />
+        <Field label="Weight (g)" value={f.weightGrams} onChange={(v) => set("weightGrams", v)} placeholder="e.g. 720" inputMode="numeric" />
       </Section>
 
       <Section title="Craft detail">
-        <Field label="Thread count — warp" k="warp" placeholder="e.g. 60" />
-        <Field label="Thread count — weft" k="weft" placeholder="e.g. 56" />
+        <Field label="Thread count — warp" value={f.warp} onChange={(v) => set("warp", v)} placeholder="e.g. 60" inputMode="numeric" />
+        <Field label="Thread count — weft" value={f.weft} onChange={(v) => set("weft", v)} placeholder="e.g. 56" inputMode="numeric" />
         <div>
           <label className="label">Zari type</label>
           <select className="input" value={f.zariType} onChange={(e) => set("zariType", e.target.value)}>
             {ZARI_TYPES.map((z) => <option key={z} value={z}>{z ? z.replace(/_/g, " ").toLowerCase() : "—"}</option>)}
           </select>
         </div>
-        <Field label="Zari (g)" k="zariGrams" placeholder="e.g. 180" />
-        <Field label="Weave technique" k="weaveTechnique" placeholder="e.g. Korvai, Kadhua, Double ikat" />
+        <Field label="Zari (g)" value={f.zariGrams} onChange={(v) => set("zariGrams", v)} placeholder="e.g. 180" inputMode="numeric" />
+        <Field label="Weave technique" value={f.weaveTechnique} onChange={(v) => set("weaveTechnique", v)} placeholder="e.g. Korvai, Kadhua, Double ikat" />
         <div>
           <label className="label">Dye type</label>
           <select className="input" value={f.dyeType} onChange={(e) => set("dyeType", e.target.value)}>
@@ -153,18 +174,18 @@ export default function EnrichForm({ productId, product, frozen }: { productId: 
       </Section>
 
       <Section title="Design">
-        <Field label="Colours (comma-separated)" k="colours" placeholder="Peacock Blue, Maroon, Gold" wide />
-        <Field label="Motifs (comma-separated)" k="motifs" placeholder="Temple Border, Mayil Chakram" wide />
+        <Field label="Colours (comma-separated)" value={f.colours} onChange={(v) => set("colours", v)} placeholder="Peacock Blue, Maroon, Gold" wide />
+        <Field label="Motifs (comma-separated)" value={f.motifs} onChange={(v) => set("motifs", v)} placeholder="Temple Border, Mayil Chakram" wide />
       </Section>
 
       <Section title="Production">
-        <Field label="Hours at the loom" k="loomHours" placeholder="e.g. 118" />
-        <Field label="Number of weavers" k="weaverCount" placeholder="e.g. 2" />
+        <Field label="Hours at the loom" value={f.loomHours} onChange={(v) => set("loomHours", v)} placeholder="e.g. 118" inputMode="numeric" />
+        <Field label="Number of weavers" value={f.weaverCount} onChange={(v) => set("weaverCount", v)} placeholder="e.g. 2" inputMode="numeric" />
       </Section>
 
-      <Section title="Indicative price (INR)">
-        <Field label="From" k="priceMin" placeholder="e.g. 45000" />
-        <Field label="To" k="priceMax" placeholder="e.g. 62000" />
+      <Section title="Indicative price (INR) — never shown publicly">
+        <Field label="From" value={f.priceMin} onChange={(v) => set("priceMin", v)} placeholder="e.g. 45000" inputMode="numeric" />
+        <Field label="To" value={f.priceMax} onChange={(v) => set("priceMax", v)} placeholder="e.g. 62000" inputMode="numeric" />
       </Section>
 
       <Section title="GI protection">
@@ -174,14 +195,14 @@ export default function EnrichForm({ productId, product, frozen }: { productId: 
         </label>
         {f.giRegistered && (
           <>
-            <Field label="GI number" k="giNumber" placeholder="e.g. GI-00007" />
-            <Field label="GI name" k="giName" placeholder="e.g. Kanchipuram Silk" />
+            <Field label="GI number" value={f.giNumber} onChange={(v) => set("giNumber", v)} placeholder="e.g. GI-00007" />
+            <Field label="GI name" value={f.giName} onChange={(v) => set("giName", v)} placeholder="e.g. Kanchipuram Silk" />
           </>
         )}
       </Section>
 
       <Section title="The story">
-        <Field label="Title" k="title" placeholder="e.g. Four months, two looms, one border" wide />
+        <Field label="Title" value={f.title} onChange={(v) => set("title", v)} placeholder="e.g. Four months, two looms, one border" wide />
         <div className="sm:col-span-2">
           <label className="label">The story of this piece</label>
           <textarea className="input min-h-24" value={f.body} onChange={(e) => set("body", e.target.value)} placeholder="What makes it special, how long it took, what inspired it…" />

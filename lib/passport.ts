@@ -200,8 +200,8 @@ export async function buildPassportView(passportId: string) {
       },
       voiceNoteUrl: mediaUrl(product.media?.voiceNoteAssetId),
       specs: product.item?.specs,
-      production: product.item?.production,
-      priceRange: product.item?.priceRange,
+      production: product.item?.production ? { loomHours: product.item.production.loomHours, weaverCount: product.item.production.weaverCount, startedAt: product.item.production.startedAt, completedAt: product.item.production.completedAt } : undefined,
+      // priceRange is intentionally NOT exposed publicly (commercially sensitive)
       narrative: product.narrative,
       giTag: product.item?.giTag,
     },

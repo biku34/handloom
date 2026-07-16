@@ -66,10 +66,16 @@ export default async function StoryPage({ params }: { params: Promise<{ passport
         </section>
       )}
 
-      {(n?.title || n?.body || n?.culturalNote) && (
+      {(n?.title || n?.body || n?.culturalNote || n?.inspiration) && (
         <section className="mt-8">
           <h2 className="font-display text-xl font-bold text-maroon-900">{n.title || "About this piece"}</h2>
           {n.body && <p className="mt-3 text-[15px] leading-relaxed text-stone-800">{n.body}</p>}
+          {n.inspiration && (
+            <div className="mt-4 border-l-4 border-silk-300 pl-3">
+              <p className="text-xs font-bold uppercase tracking-wide text-silk-700">Inspiration</p>
+              <p className="mt-1 text-sm leading-relaxed text-stone-700">{n.inspiration}</p>
+            </div>
+          )}
           {n.culturalNote && (
             <div className="card mt-4 p-4 bg-silk-50">
               <p className="text-xs font-bold uppercase tracking-wide text-silk-700">Cultural note</p>

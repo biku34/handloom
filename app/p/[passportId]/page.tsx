@@ -170,6 +170,31 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
             {product.voiceNoteUrl && (
               <AudioPlayer src={product.voiceNoteUrl} label="The weaver, about this piece" />
             )}
+
+            {/* The story, inline below the photos */}
+            {(product.narrative?.title || product.narrative?.body || product.narrative?.inspiration || product.narrative?.culturalNote) && (
+              <section className="card p-5 sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-silk-700">The story</p>
+                {product.narrative.title && (
+                  <h2 className="font-display mt-1 text-xl sm:text-2xl font-bold text-maroon-900">{product.narrative.title}</h2>
+                )}
+                {product.narrative.body && (
+                  <p className="mt-3 text-[15px] leading-relaxed text-stone-800">{product.narrative.body}</p>
+                )}
+                {product.narrative.inspiration && (
+                  <div className="mt-4 border-l-4 border-silk-300 pl-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-silk-700">Inspiration</p>
+                    <p className="mt-1 text-sm leading-relaxed text-stone-700">{product.narrative.inspiration}</p>
+                  </div>
+                )}
+                {product.narrative.culturalNote && (
+                  <div className="mt-4 rounded-xl bg-silk-50 border border-silk-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-silk-700">Cultural note</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-stone-700">{product.narrative.culturalNote}</p>
+                  </div>
+                )}
+              </section>
+            )}
           </div>
 
           {/* ── RIGHT: the facts, materials, and next steps ── */}
@@ -187,14 +212,61 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
                   </span>
                 ))}
               </div>
-              {product.specs && (
-                <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
-                  {product.specs.lengthCm ? (<div className="flex justify-between border-b border-silk-100 pb-1.5"><dt className="text-stone-500">Length</dt><dd className="font-medium">{(product.specs.lengthCm / 100).toFixed(1)} m</dd></div>) : null}
-                  {product.specs.weightGrams ? (<div className="flex justify-between border-b border-silk-100 pb-1.5"><dt className="text-stone-500">Weight</dt><dd className="font-medium">{product.specs.weightGrams} g</dd></div>) : null}
-                  {product.specs.zariGrams ? (<div className="flex justify-between border-b border-silk-100 pb-1.5"><dt className="text-stone-500">Zari</dt><dd className="font-medium">{product.specs.zariGrams} g</dd></div>) : null}
-                  {product.specs.dyeType ? (<div className="flex justify-between border-b border-silk-100 pb-1.5"><dt className="text-stone-500">Dye</dt><dd className="font-medium">{String(product.specs.dyeType).replace(/_/g, " ").toLowerCase()}</dd></div>) : null}
-                </dl>
-              )}
+              {(() => {
+                const s = product.specs || {};
+                const p = product.production || {};
+                const fmt = (v: string) => String(v).replace(/_/g, " ").toLowerCase();
+                const zari = s.zariType ? fmt(s.zariType) + (s.zariGrams ? ` · ${s.zariGrams} g` : "") : s.zariGrams ? `${s.zariGrams} g` : null;
+                const rows: [string, string | null][] = [
+                  ["Length", s.lengthCm ? `${(s.lengthCm / 100).toFixed(2)} m` : null],
+                  ["Width", s.widthCm ? `${s.widthCm} cm` : null],
+                  ["Weight", s.weightGrams ? `${s.weightGrams} g` : null],
+                  ["Thread count", s.threadCount?.warp || s.threadCount?.weft ? `${s.threadCount?.warp ?? "?"} × ${s.threadCount?.weft ?? "?"}` : null],
+                  ["Weave", s.weaveTechnique ? s.weaveTechnique.charAt(0).toUpperCase() + fmt(s.weaveTechnique).slice(1) : null],
+                  ["Zari", zari],
+                  ["Dye", s.dyeType ? fmt(s.dyeType) : null],
+                  ["Hours at loom", p.loomHours ? `${p.loomHours} hrs` : null],
+                  ["Woven by", p.weaverCount ? `${p.weaverCount} ${p.weaverCount === 1 ? "weaver" : "weavers"}` : null],
+                ];
+                const shown = rows.filter(([, v]) => v);
+                const colours: string[] = (s.colours || []).filter(Boolean);
+                const motifs: string[] = (s.motifs || []).filter(Boolean);
+                if (!shown.length && !colours.length && !motifs.length) return null;
+                return (
+                  <>
+                    {shown.length > 0 && (
+                      <dl className="mt-4 grid grid-cols-2 gap-x-6 gap-y-3 text-sm">
+                        {shown.map(([k, v]) => (
+                          <div key={k} className="flex justify-between border-b border-silk-100 pb-1.5">
+                            <dt className="text-stone-500">{k}</dt>
+                            <dd className="font-medium text-right">{v}</dd>
+                          </div>
+                        ))}
+                      </dl>
+                    )}
+                    {colours.length > 0 && (
+                      <div className="mt-4">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-silk-700">Colours</p>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {colours.map((c) => (
+                            <span key={c} className="rounded-full bg-silk-100 border border-silk-300 px-2.5 py-0.5 text-xs text-maroon-800">{c}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {motifs.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-xs font-semibold uppercase tracking-wide text-silk-700">Motifs</p>
+                        <div className="mt-1.5 flex flex-wrap gap-1.5">
+                          {motifs.map((m) => (
+                            <span key={m} className="rounded-full bg-silk-100 border border-silk-300 px-2.5 py-0.5 text-xs text-maroon-800">{m}</span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </>
+                );
+              })()}
             </section>
 
             {materials.length > 0 && (
@@ -232,10 +304,6 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
               <Link href={`/p/${passportId}/journey`} className="card flex items-center justify-between px-5 py-4 hover:border-maroon-600">
                 <span className="font-semibold text-maroon-900">See the full journey</span>
                 <span className="text-stone-400">{journey.stepCount} steps →</span>
-              </Link>
-              <Link href={`/p/${passportId}/story`} className="card flex items-center justify-between px-5 py-4 hover:border-maroon-600">
-                <span className="font-semibold text-maroon-900">Read the story</span>
-                <span className="text-stone-400">→</span>
               </Link>
               <Link href={`/p/${passportId}/claim`} className={`flex items-center justify-between px-5 py-4 rounded-2xl ${ownership.claimed ? "card" : "bg-maroon-700 text-white hover:bg-maroon-800 transition-colors"}`}>
                 <span className={`font-semibold ${ownership.claimed ? "text-maroon-900" : "text-white"}`}>{ownership.claimed ? "Ownership" : "I bought this — claim it"}</span>
