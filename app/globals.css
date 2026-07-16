@@ -1,0 +1,120 @@
+@import "tailwindcss";
+
+@theme {
+  --color-silk-50: #fdf8f0;
+  --color-silk-100: #f8eeda;
+  --color-silk-200: #f0dcb4;
+  --color-silk-300: #e5c383;
+  --color-silk-700: #8a6224;
+  --color-maroon-600: #8c2f39;
+  --color-maroon-700: #701f2b;
+  --color-maroon-800: #571722;
+  --color-maroon-900: #40101a;
+  --color-leaf-600: #0d7a3f;
+  --color-leaf-700: #0a6132;
+  --font-serif-display: Georgia, "Times New Roman", serif;
+}
+
+body {
+  background: var(--color-silk-50);
+  color: #2d2118;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+}
+
+@layer components {
+.font-display {
+  font-family: var(--font-serif-display);
+}
+
+/* woven top border used on public pages */
+.weave-border {
+  height: 6px;
+  background: repeating-linear-gradient(
+    90deg,
+    #8c2f39 0 14px,
+    #e5c383 14px 20px,
+    #571722 20px 34px,
+    #e5c383 34px 40px
+  );
+}
+
+.card {
+  background: #ffffff;
+  border-radius: 1rem;
+  border: 1px solid var(--color-silk-200);
+  box-shadow: 0 1px 2px rgba(64, 16, 26, 0.06);
+  display: block;
+}
+
+.btn,
+.btn-primary,
+.btn-secondary,
+.btn-green {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border-radius: 0.75rem;
+  padding: 0.625rem 1rem;
+  font-weight: 600;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  cursor: pointer;
+  transition: background-color 0.15s ease, border-color 0.15s ease;
+  text-align: center;
+}
+.btn:disabled,
+.btn-primary:disabled,
+.btn-secondary:disabled,
+.btn-green:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+.btn-primary {
+  background: var(--color-maroon-700);
+  color: #fff;
+}
+.btn-primary:hover:not(:disabled) {
+  background: var(--color-maroon-800);
+}
+.btn-secondary {
+  background: var(--color-silk-100);
+  color: var(--color-maroon-800);
+  border: 1px solid var(--color-silk-300);
+}
+.btn-secondary:hover:not(:disabled) {
+  background: var(--color-silk-200);
+}
+.btn-green {
+  background: var(--color-leaf-600);
+  color: #fff;
+}
+.btn-green:hover:not(:disabled) {
+  background: var(--color-leaf-700);
+}
+
+.input {
+  width: 100%;
+  border-radius: 0.75rem;
+  border: 1px solid var(--color-silk-300);
+  background: #fff;
+  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  line-height: 1.25rem;
+  outline: none;
+}
+.input:focus {
+  border-color: var(--color-maroon-600);
+  box-shadow: 0 0 0 3px rgba(140, 47, 57, 0.15);
+}
+
+.label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-silk-700);
+  margin-bottom: 0.375rem;
+}
+}
