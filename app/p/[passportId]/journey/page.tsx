@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { buildPassportView } from "@/lib/passport";
+import SiteHeader from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -27,18 +28,23 @@ export default async function JourneyPage({ params }: { params: Promise<{ passpo
   const view = await buildPassportView(passportId).catch(() => null);
   if (!view) {
     return (
-      <main className="mx-auto max-w-md px-4 py-10 text-center">
-        <p>No record of this code.</p>
-        <Link className="btn-primary mt-4" href="/verify">Verify a tag</Link>
-      </main>
+      <div>
+        <SiteHeader />
+        <main className="mx-auto max-w-md px-4 py-10 text-center">
+          <p>No record of this code.</p>
+          <Link className="btn-primary mt-4" href="/verify">Verify a tag</Link>
+        </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto max-w-md px-4 py-6 pb-16">
-      <Link href={`/p/${passportId}`} className="text-sm text-maroon-700 font-semibold">← Back to passport</Link>
-      <h1 className="font-display mt-3 text-2xl font-bold text-maroon-900">The journey</h1>
-      <p className="mt-1 text-sm text-stone-600">{view.product.name}</p>
+    <div>
+      <SiteHeader />
+      <main className="mx-auto max-w-2xl px-4 py-6 pb-16">
+        <Link href={`/p/${passportId}`} className="text-sm text-maroon-700 font-semibold">← Back to passport</Link>
+        <h1 className="font-display mt-3 text-2xl sm:text-3xl font-bold text-maroon-900">The journey</h1>
+        <p className="mt-1 text-sm text-stone-600">{view.product.name}</p>
 
       <ol className="mt-6 relative border-l-2 border-silk-300 pl-6 space-y-7">
         {view.journey.steps.map((step: { eventType: string; occurredAt: string | Date; recordedAt?: string | Date; actor?: string; actorType?: string; note?: string; location?: string; ledgerSeq?: number | null }, i: number) => {
@@ -78,6 +84,7 @@ export default async function JourneyPage({ params }: { params: Promise<{ passpo
         })}
       </ol>
       {view.journey.steps.length === 0 && <p className="mt-6 text-sm text-stone-500">No journey events recorded yet.</p>}
-    </main>
+      </main>
+    </div>
   );
 }

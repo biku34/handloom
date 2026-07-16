@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buildPassportView } from "@/lib/passport";
 import ClaimForm from "./ClaimForm";
+import SiteHeader from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -9,18 +10,23 @@ export default async function ClaimPage({ params }: { params: Promise<{ passport
   const view = await buildPassportView(passportId).catch(() => null);
   if (!view) {
     return (
-      <main className="mx-auto max-w-md px-4 py-10 text-center">
-        <p>No record of this code.</p>
-        <Link className="btn-primary mt-4" href="/verify">Verify a tag</Link>
-      </main>
+      <div>
+        <SiteHeader />
+        <main className="mx-auto max-w-md px-4 py-10 text-center">
+          <p>No record of this code.</p>
+          <Link className="btn-primary mt-4" href="/verify">Verify a tag</Link>
+        </main>
+      </div>
     );
   }
 
   return (
-    <main className="mx-auto max-w-md px-4 py-6 pb-16">
-      <Link href={`/p/${passportId}`} className="text-sm text-maroon-700 font-semibold">← Back to passport</Link>
-      <h1 className="font-display mt-3 text-2xl font-bold text-maroon-900">Claim this piece</h1>
-      <p className="mt-1 text-sm text-stone-600">{view.product.name}</p>
+    <div>
+      <SiteHeader />
+      <main className="mx-auto max-w-lg px-4 py-6 pb-16">
+        <Link href={`/p/${passportId}`} className="text-sm text-maroon-700 font-semibold">← Back to passport</Link>
+        <h1 className="font-display mt-3 text-2xl sm:text-3xl font-bold text-maroon-900">Claim this piece</h1>
+        <p className="mt-1 text-sm text-stone-600">{view.product.name}</p>
 
       {view.ownership.claimed ? (
         <div className="card mt-5 p-5">
@@ -41,6 +47,7 @@ export default async function ClaimPage({ params }: { params: Promise<{ passport
           </p>
         </div>
       )}
-    </main>
+      </main>
+    </div>
   );
 }

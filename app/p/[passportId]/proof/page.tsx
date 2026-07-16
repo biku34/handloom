@@ -3,6 +3,7 @@ import { buildPassportView } from "@/lib/passport";
 import { dbConnect } from "@/lib/db";
 import { LedgerEntry } from "@/lib/models";
 import { verifyLedgerChain } from "@/lib/ledger";
+import SiteHeader from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -16,10 +17,13 @@ export default async function ProofPage({ params }: { params: Promise<{ passport
   const view = await buildPassportView(passportId).catch(() => null);
   if (!view) {
     return (
-      <main className="mx-auto max-w-md px-4 py-10 text-center">
-        <p>No record of this code.</p>
-        <Link className="btn-primary mt-4" href="/verify">Verify a tag</Link>
-      </main>
+      <div>
+        <SiteHeader />
+        <main className="mx-auto max-w-md px-4 py-10 text-center">
+          <p>No record of this code.</p>
+          <Link className="btn-primary mt-4" href="/verify">Verify a tag</Link>
+        </main>
+      </div>
     );
   }
 
@@ -32,7 +36,9 @@ export default async function ProofPage({ params }: { params: Promise<{ passport
   const chain = await verifyLedgerChain();
 
   return (
-    <main className="mx-auto max-w-2xl px-4 py-6 pb-16">
+    <div>
+      <SiteHeader />
+      <main className="mx-auto max-w-2xl px-4 py-6 pb-16">
       <Link href={`/p/${passportId}`} className="text-sm text-maroon-700 font-semibold">← Back to passport</Link>
       <h1 className="font-display mt-3 text-2xl font-bold text-maroon-900">Verify it yourself</h1>
       <p className="mt-2 text-sm leading-relaxed text-stone-600">
@@ -93,6 +99,7 @@ console.log(c.createHash('sha256')
  .update('<seq>|<type>|<dataHash>|<prevHash>|<atISO>')
  .digest('hex'))"`}</pre>
       </div>
-    </main>
+      </main>
+    </div>
   );
 }

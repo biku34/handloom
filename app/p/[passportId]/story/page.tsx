@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buildPassportView } from "@/lib/passport";
 import AudioPlayer from "@/components/AudioPlayer";
+import SiteHeader from "@/components/SiteHeader";
 
 export const dynamic = "force-dynamic";
 
@@ -9,18 +10,23 @@ export default async function StoryPage({ params }: { params: Promise<{ passport
   const view = await buildPassportView(passportId).catch(() => null);
   if (!view) {
     return (
-      <main className="mx-auto max-w-md px-4 py-10 text-center">
-        <p>No record of this code.</p>
-        <Link className="btn-primary mt-4" href="/verify">Verify a tag</Link>
-      </main>
+      <div>
+        <SiteHeader />
+        <main className="mx-auto max-w-md px-4 py-10 text-center">
+          <p>No record of this code.</p>
+          <Link className="btn-primary mt-4" href="/verify">Verify a tag</Link>
+        </main>
+      </div>
     );
   }
   const w = view.weaver;
   const n = view.product.narrative;
 
   return (
-    <main className="mx-auto max-w-md px-4 py-6 pb-16">
-      <Link href={`/p/${passportId}`} className="text-sm text-maroon-700 font-semibold">← Back to passport</Link>
+    <div>
+      <SiteHeader />
+      <main className="mx-auto max-w-2xl px-4 py-6 pb-16">
+        <Link href={`/p/${passportId}`} className="text-sm text-maroon-700 font-semibold">← Back to passport</Link>
 
       {w && (
         <section className="mt-4">
@@ -78,6 +84,7 @@ export default async function StoryPage({ params }: { params: Promise<{ passport
           See all of {w.displayName?.split(" ")[0]}&apos;s work →
         </Link>
       )}
-    </main>
+      </main>
+    </div>
   );
 }
