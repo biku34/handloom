@@ -76,64 +76,62 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
           </div>
         )}
 
-        {/* ── Weaver profile, up top ── */}
-        {weaver && (
-          <section className="card p-5 sm:p-6">
-            <div className="flex items-start gap-4 sm:gap-5">
-              {weaver.photoUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img src={weaver.photoUrl} alt={weaver.displayName || "The weaver"} className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl object-cover shrink-0" />
-              ) : (
-                <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-2xl bg-silk-100 flex items-center justify-center text-3xl shrink-0">🧑‍🦱</div>
-              )}
-              <div className="min-w-0 flex-1">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-silk-700">Woven by</p>
-                <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
-                  <h1 className="font-display text-2xl sm:text-3xl font-bold text-maroon-900">{weaver.displayName}</h1>
-                  <span className={`rounded-full px-2.5 py-0.5 text-[11px] font-bold ${pill.cls}`}>{pill.label}</span>
-                </div>
-                <p className="mt-1 text-sm text-stone-600">
-                  {[weaver.generation ? `${weaver.generation}th generation` : null, weaver.cluster, weaver.yearsWeaving ? `${weaver.yearsWeaving} years at the loom` : null]
-                    .filter(Boolean)
-                    .join(" · ")}
-                </p>
-                {weaver.verification?.verifiedBy && (
-                  <p className="mt-2 flex items-start gap-2 text-xs text-stone-500">
-                    <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-leaf-600 text-white text-[9px] shrink-0">✓</span>
-                    <span>
-                      Identity and loom physically verified by <strong>{weaver.verification.verifiedBy}</strong>
-                      {weaver.verification.verifiedAt ? ` on ${new Date(weaver.verification.verifiedAt).toLocaleDateString("en-IN")}` : ""}
-                    </span>
-                  </p>
+        {/* ── weaver sidebar (left) + product main (right) ── */}
+        <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
+          {/* ── LEFT SIDEBAR: the weaver ── */}
+          {weaver && (
+            <aside className="lg:sticky lg:top-6">
+              <section className="card overflow-hidden">
+                {weaver.photoUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img src={weaver.photoUrl} alt={weaver.displayName || "The weaver"} className="w-full aspect-[4/3] object-cover" />
+                ) : (
+                  <div className="w-full aspect-[4/3] bg-silk-100 flex items-center justify-center text-6xl">🧑‍🦱</div>
                 )}
-              </div>
-            </div>
-            {weaver.story?.audioUrl && (
-              <div className="mt-4">
-                <AudioPlayer src={weaver.story.audioUrl} label={`Hear ${weaver.displayName?.split(" ")[0]}'s voice`} durationSec={weaver.story.durationSec} />
-              </div>
-            )}
-            {!weaver.story?.audioUrl && weaver.story?.transcript?.original?.text && (
-              <blockquote className="mt-4 border-l-4 border-silk-300 pl-3 text-sm italic text-stone-700">
-                “{weaver.story.transcript.original.text.slice(0, 220)}{weaver.story.transcript.original.text.length > 220 ? "…" : ""}”
-              </blockquote>
-            )}
-            {weaver.handle && (
-              <Link href={`/weaver/${weaver.handle}`} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-maroon-700 hover:gap-2 transition-all">
-                See all of {weaver.displayName?.split(" ")[0]}&apos;s work →
-              </Link>
-            )}
-          </section>
-        )}
+                <div className="p-5">
+                  <p className="text-xs font-semibold uppercase tracking-[0.2em] text-silk-700">Woven by</p>
+                  <h1 className="font-display text-2xl font-bold text-maroon-900">{weaver.displayName}</h1>
+                  <span className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${pill.cls}`}>{pill.label}</span>
+                  <p className="mt-2 text-sm text-stone-600">
+                    {[weaver.generation ? `${weaver.generation}th generation` : null, weaver.cluster, weaver.yearsWeaving ? `${weaver.yearsWeaving} years at the loom` : null]
+                      .filter(Boolean)
+                      .join(" · ")}
+                  </p>
+                  {weaver.verification?.verifiedBy && (
+                    <p className="mt-3 flex items-start gap-2 text-xs text-stone-500">
+                      <span className="mt-0.5 inline-flex h-4 w-4 items-center justify-center rounded-full bg-leaf-600 text-white text-[9px] shrink-0">✓</span>
+                      <span>
+                        Identity and loom physically verified by <strong>{weaver.verification.verifiedBy}</strong>
+                        {weaver.verification.verifiedAt ? ` on ${new Date(weaver.verification.verifiedAt).toLocaleDateString("en-IN")}` : ""}
+                      </span>
+                    </p>
+                  )}
+                  {weaver.story?.audioUrl && (
+                    <div className="mt-4">
+                      <AudioPlayer src={weaver.story.audioUrl} label={`Hear ${weaver.displayName?.split(" ")[0]}'s voice`} durationSec={weaver.story.durationSec} />
+                    </div>
+                  )}
+                  {!weaver.story?.audioUrl && weaver.story?.transcript?.original?.text && (
+                    <blockquote className="mt-4 border-l-4 border-silk-300 pl-3 text-sm italic text-stone-700">
+                      “{weaver.story.transcript.original.text.slice(0, 180)}{weaver.story.transcript.original.text.length > 180 ? "…" : ""}”
+                    </blockquote>
+                  )}
+                  {weaver.handle && (
+                    <Link href={`/weaver/${weaver.handle}`} className="mt-4 inline-flex items-center gap-1 text-sm font-semibold text-maroon-700 hover:gap-2 transition-all">
+                      See all of {weaver.displayName?.split(" ")[0]}&apos;s work →
+                    </Link>
+                  )}
+                </div>
+              </section>
+            </aside>
+          )}
 
-        {/* two-column on desktop, single column on phones */}
-        <div className="mt-6 grid gap-6 lg:grid-cols-[1.05fr_0.95fr] lg:items-start">
-          {/* ── LEFT: the product photos ── */}
+          {/* ── MAIN: the product ── */}
           <div className="space-y-6">
             {mainImage && (
               <section className="card overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={mainImage} alt={product.name || "The piece"} className="w-full aspect-square object-cover" />
+                <img src={mainImage} alt={product.name || "The piece"} className="w-full max-h-[560px] object-cover" />
                 <div className="px-5 py-4">
                   <p className="text-sm font-semibold text-maroon-800">
                     {[
@@ -148,57 +146,10 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
               </section>
             )}
 
-            {secondImage && (
-              <section className="card overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={secondImage} alt="On the loom" className="w-full aspect-square object-cover" />
-                <div className="px-5 py-3">
-                  <p className="text-xs font-semibold uppercase tracking-wide text-silk-700">On the loom where it was woven</p>
-                </div>
-              </section>
-            )}
-
-            {product.images.gallery?.filter(Boolean).length > 0 && (
-              <div className="grid grid-cols-3 gap-3">
-                {product.images.gallery.filter(Boolean).slice(0, 6).map((g: string, i: number) => (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img key={i} src={g} alt="" className="card aspect-square object-cover" />
-                ))}
-              </div>
-            )}
-
             {product.voiceNoteUrl && (
               <AudioPlayer src={product.voiceNoteUrl} label="The weaver, about this piece" />
             )}
 
-            {/* The story, inline below the photos */}
-            {(product.narrative?.title || product.narrative?.body || product.narrative?.inspiration || product.narrative?.culturalNote) && (
-              <section className="card p-5 sm:p-6">
-                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-silk-700">The story</p>
-                {product.narrative.title && (
-                  <h2 className="font-display mt-1 text-xl sm:text-2xl font-bold text-maroon-900">{product.narrative.title}</h2>
-                )}
-                {product.narrative.body && (
-                  <p className="mt-3 text-[15px] leading-relaxed text-stone-800">{product.narrative.body}</p>
-                )}
-                {product.narrative.inspiration && (
-                  <div className="mt-4 border-l-4 border-silk-300 pl-3">
-                    <p className="text-xs font-bold uppercase tracking-wide text-silk-700">Inspiration</p>
-                    <p className="mt-1 text-sm leading-relaxed text-stone-700">{product.narrative.inspiration}</p>
-                  </div>
-                )}
-                {product.narrative.culturalNote && (
-                  <div className="mt-4 rounded-xl bg-silk-50 border border-silk-200 p-4">
-                    <p className="text-xs font-bold uppercase tracking-wide text-silk-700">Cultural note</p>
-                    <p className="mt-1.5 text-sm leading-relaxed text-stone-700">{product.narrative.culturalNote}</p>
-                  </div>
-                )}
-              </section>
-            )}
-          </div>
-
-          {/* ── RIGHT: the facts, materials, and next steps ── */}
-          <div className="space-y-6">
             <section className="card p-5 sm:p-6">
               <h2 className="font-display text-xl sm:text-2xl font-bold text-maroon-900">{product.name}</h2>
               <div className="mt-3 flex flex-wrap gap-2">
@@ -244,24 +195,28 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
                         ))}
                       </dl>
                     )}
-                    {colours.length > 0 && (
-                      <div className="mt-4">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-silk-700">Colours</p>
-                        <div className="mt-1.5 flex flex-wrap gap-1.5">
-                          {colours.map((c) => (
-                            <span key={c} className="rounded-full bg-silk-100 border border-silk-300 px-2.5 py-0.5 text-xs text-maroon-800">{c}</span>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    {motifs.length > 0 && (
-                      <div className="mt-3">
-                        <p className="text-xs font-semibold uppercase tracking-wide text-silk-700">Motifs</p>
-                        <div className="mt-1.5 flex flex-wrap gap-1.5">
-                          {motifs.map((m) => (
-                            <span key={m} className="rounded-full bg-silk-100 border border-silk-300 px-2.5 py-0.5 text-xs text-maroon-800">{m}</span>
-                          ))}
-                        </div>
+                    {(colours.length > 0 || motifs.length > 0) && (
+                      <div className="mt-4 grid grid-cols-2 gap-x-6 gap-y-4">
+                        {colours.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-silk-700">Colours</p>
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              {colours.map((c) => (
+                                <span key={c} className="rounded-full bg-silk-100 border border-silk-300 px-2.5 py-0.5 text-xs text-maroon-800">{c}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {motifs.length > 0 && (
+                          <div>
+                            <p className="text-xs font-semibold uppercase tracking-wide text-silk-700">Motifs</p>
+                            <div className="mt-1.5 flex flex-wrap gap-1.5">
+                              {motifs.map((m) => (
+                                <span key={m} className="rounded-full bg-silk-100 border border-silk-300 px-2.5 py-0.5 text-xs text-maroon-800">{m}</span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </>
@@ -297,6 +252,50 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
                   </p>
                 )}
               </section>
+            )}
+
+            {/* The story, inline */}
+            {(product.narrative?.title || product.narrative?.body || product.narrative?.inspiration || product.narrative?.culturalNote) && (
+              <section className="card p-5 sm:p-6">
+                <p className="text-xs font-semibold uppercase tracking-[0.2em] text-silk-700">The story</p>
+                {product.narrative.title && (
+                  <h2 className="font-display mt-1 text-xl sm:text-2xl font-bold text-maroon-900">{product.narrative.title}</h2>
+                )}
+                {product.narrative.body && (
+                  <p className="mt-3 text-[15px] leading-relaxed text-stone-800">{product.narrative.body}</p>
+                )}
+                {product.narrative.inspiration && (
+                  <div className="mt-4 border-l-4 border-silk-300 pl-3">
+                    <p className="text-xs font-bold uppercase tracking-wide text-silk-700">Inspiration</p>
+                    <p className="mt-1 text-sm leading-relaxed text-stone-700">{product.narrative.inspiration}</p>
+                  </div>
+                )}
+                {product.narrative.culturalNote && (
+                  <div className="mt-4 rounded-xl bg-silk-50 border border-silk-200 p-4">
+                    <p className="text-xs font-bold uppercase tracking-wide text-silk-700">Cultural note</p>
+                    <p className="mt-1.5 text-sm leading-relaxed text-stone-700">{product.narrative.culturalNote}</p>
+                  </div>
+                )}
+              </section>
+            )}
+
+            {/* secondary imagery */}
+            {secondImage && (
+              <section className="card overflow-hidden">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={secondImage} alt="On the loom" className="w-full max-h-[480px] object-cover" />
+                <div className="px-5 py-3">
+                  <p className="text-xs font-semibold uppercase tracking-wide text-silk-700">On the loom where it was woven</p>
+                </div>
+              </section>
+            )}
+            {product.images.gallery?.filter(Boolean).length > 0 && (
+              <div className="grid grid-cols-3 gap-3">
+                {product.images.gallery.filter(Boolean).slice(0, 6).map((g: string, i: number) => (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img key={i} src={g} alt="" className="card aspect-square object-cover" />
+                ))}
+              </div>
             )}
 
             {/* deeper paths */}

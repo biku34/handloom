@@ -9,8 +9,12 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen antialiased">
+    // suppressHydrationWarning tolerates attribute differences that browser
+    // extensions (Grammarly, password managers, etc.) inject into <html>/<body>
+    // before React hydrates. It only affects these two elements' own attributes —
+    // it does NOT hide genuine hydration bugs inside the app's components.
+    <html lang="en" suppressHydrationWarning>
+      <body className="min-h-screen antialiased" suppressHydrationWarning>
         <div className="weave-border" />
         {children}
       </body>
