@@ -73,7 +73,7 @@ export default function AttestPanel({ weaver }: { weaver: { _id: string; weaverI
             <span>I verified the weaver&apos;s identity against their physical ID document, in person.</span>
           </label>
           <button onClick={attest} disabled={busy || !loomConfirmed || !identityConfirmed} className="btn-green w-full">
-            {busy ? "Recording attestation…" : "✅ Attest (valid 730 days, ledger-anchored)"}
+            {busy ? "Recording attestation…" : "Attest — valid 730 days, ledger-anchored"}
           </button>
         </div>
       )}

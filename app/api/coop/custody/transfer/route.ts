@@ -29,6 +29,13 @@ export async function POST(req: NextRequest) {
       const product = await Product.findById(pid);
       if (!product) throw new Error("not found");
       const isReceive = session.role === "RETAILER";
+      // An item is dispatched exactly once (FR-E2): once custody has left the
+      // weaver/co-op, it cannot be dispatched again.
+      if (!isReceive) {
+        const holder = product.custody?.currentHolderType;
+        if (holder === "RETAILER") throw new Error(`already dispatched to ${product.custody?.currentHolderName || "a retailer"}`);
+        if (holder === "CONSUMER") throw new Error("already claimed by a consumer — custody cannot move again");
+      }
       await recordProvenanceEvent({
         productId: pid,
         eventType: isReceive ? "RECEIVED" : "DISPATCHED",

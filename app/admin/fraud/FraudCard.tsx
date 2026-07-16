@@ -62,9 +62,12 @@ export default function FraudCard({ report }: { report: Report }) {
       </div>
       {report.description && <p className="mt-2 text-sm text-stone-600">{report.description}</p>}
       {report.autoSignals?.length > 0 && (
-        <ul className="mt-2 space-y-1">
+        <ul className="mt-3 space-y-1.5">
           {report.autoSignals.map((s, i) => (
-            <li key={i} className="text-xs text-stone-500">⚙ {s.signal} (+{s.weight}) {s.detail ? `— ${s.detail}` : ""}</li>
+            <li key={i} className="text-xs text-stone-500 flex items-center gap-2">
+              <span className="rounded bg-silk-100 border border-silk-200 px-1.5 py-0.5 font-mono text-[10px] font-bold text-maroon-800">+{s.weight}</span>
+              {s.signal} {s.detail ? `— ${s.detail}` : ""}
+            </li>
           ))}
         </ul>
       )}
@@ -72,10 +75,10 @@ export default function FraudCard({ report }: { report: Report }) {
       <div className="mt-4 space-y-2">
         <input className="input" placeholder="Resolution note (required to void)" value={resolution} onChange={(e) => setResolution(e.target.value)} />
         <div className="flex flex-wrap gap-2">
-          <button onClick={() => act("investigate")} disabled={busy} className="btn-secondary text-xs px-3 py-1.5">🔍 Investigate</button>
-          <button onClick={() => act("dismiss")} disabled={busy} className="btn-secondary text-xs px-3 py-1.5">✓ Dismiss (false positive)</button>
-          <button onClick={() => act("confirm")} disabled={busy} className="btn text-xs px-3 py-1.5 bg-orange-600 text-white hover:bg-orange-700">⚠ Confirm fraud</button>
-          <button onClick={() => act("void")} disabled={busy || !resolution.trim()} className="btn text-xs px-3 py-1.5 bg-red-700 text-white hover:bg-red-800">✕ Void passport</button>
+          <button onClick={() => act("investigate")} disabled={busy} className="btn-secondary text-xs px-3 py-1.5">Investigate</button>
+          <button onClick={() => act("dismiss")} disabled={busy} className="btn-secondary text-xs px-3 py-1.5">Dismiss — false positive</button>
+          <button onClick={() => act("confirm")} disabled={busy} className="btn text-xs px-3 py-1.5 bg-orange-600 text-white hover:bg-orange-700">Confirm fraud</button>
+          <button onClick={() => act("void")} disabled={busy || !resolution.trim()} className="btn text-xs px-3 py-1.5 bg-red-700 text-white hover:bg-red-800">Void passport</button>
         </div>
       </div>
     </div>

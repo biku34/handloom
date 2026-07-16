@@ -26,8 +26,9 @@ export default async function VerifyQueuePage() {
 
   return (
     <PortalShell title={session?.role === "VERIFIER" ? "Verifier" : "Platform Admin"} nav={session?.role === "VERIFIER" ? [{ href: "/admin/verify", label: "✅ Verification queue" }] : ADMIN_NAV} userName={session?.name}>
-      <h1 className="font-display text-2xl font-bold text-maroon-900">Verification queue</h1>
-      <p className="mt-1 text-sm text-stone-600 max-w-2xl">
+      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-silk-700">The trust root</p>
+      <h1 className="font-display mt-1 text-3xl font-bold text-maroon-900">Verification queue</h1>
+      <p className="mt-1.5 text-sm text-stone-600 max-w-2xl">
         This attestation is the trust root of SUTRA. Attest only after physically visiting the weaver: see the loom,
         confirm it is human-powered, and check the ID document. Everything the consumer trusts flows from this moment.
       </p>
@@ -37,7 +38,7 @@ export default async function VerifyQueuePage() {
         {pending.map((w) => (
           <AttestPanel key={String(w._id)} weaver={toPanel(w)} />
         ))}
-        {pending.length === 0 && <p className="text-sm text-stone-500">Queue is clear. 🎉</p>}
+        {pending.length === 0 && <p className="text-sm text-stone-500">The queue is clear.</p>}
       </div>
 
       <h2 className="mt-10 font-bold text-maroon-900">Recently verified</h2>

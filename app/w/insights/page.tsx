@@ -1,4 +1,5 @@
 import PortalShell from "@/components/PortalShell";
+import { WEAVER_NAV } from "@/components/nav";
 import { getSession } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { Product, Scan } from "@/lib/models";
@@ -25,18 +26,11 @@ export default async function InsightsPage() {
   const last30 = scans.filter((s) => new Date(s.at).getTime() > Date.now() - 30 * 86400000).length;
 
   return (
-    <PortalShell
-      title="Weaver"
-      nav={[
-        { href: "/w/dashboard", label: "🏠 My work" },
-        { href: "/w/register", label: "➕ Register a piece" },
-        { href: "/w/insights", label: "📊 Who saw my work" },
-      ]}
-      userName={session?.name}
-    >
-      <h1 className="font-display text-2xl font-bold text-maroon-900">Who saw my work</h1>
+    <PortalShell title="Weaver" nav={WEAVER_NAV} userName={session?.name}>
+      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-silk-700">Reach</p>
+      <h1 className="font-display mt-1 text-3xl font-bold text-maroon-900">Who saw my work</h1>
 
-      <div className="card mt-5 p-6 text-center bg-maroon-900 text-silk-100 border-0">
+      <div className="card mt-6 p-8 text-center bg-gradient-to-br from-maroon-900 via-maroon-800 to-maroon-700 text-silk-100 border-0 shadow-lg">
         <p className="font-display text-3xl font-bold">
           Your work was seen by {unique || total} {unique === 1 ? "person" : "people"}
           {countries.size > 0 ? ` in ${countries.size} ${countries.size === 1 ? "country" : "countries"}` : ""}.
@@ -49,7 +43,7 @@ export default async function InsightsPage() {
           <h2 className="font-bold text-maroon-900">Where your pieces were scanned</h2>
           <div className="mt-3 flex flex-wrap gap-2">
             {cities.map((c) => (
-              <span key={c} className="rounded-full bg-silk-100 border border-silk-300 px-3 py-1 text-sm text-maroon-800">📍 {c}</span>
+              <span key={c} className="rounded-full bg-silk-100 border border-silk-300 px-3.5 py-1 text-sm text-maroon-800">{c}</span>
             ))}
           </div>
         </div>

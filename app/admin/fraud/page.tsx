@@ -27,8 +27,9 @@ export default async function FraudQueuePage() {
 
   return (
     <PortalShell title="Platform Admin" nav={ADMIN_NAV} userName={session?.name}>
-      <h1 className="font-display text-2xl font-bold text-maroon-900">Fraud queue</h1>
-      <p className="mt-1 text-sm text-stone-600">Sorted by risk. A duplicate-claim signal is conclusive evidence of tag cloning.</p>
+      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-silk-700">Investigations</p>
+      <h1 className="font-display mt-1 text-3xl font-bold text-maroon-900">Fraud queue</h1>
+      <p className="mt-1.5 text-sm text-stone-600">Sorted by risk. A duplicate-claim signal is conclusive evidence of tag cloning.</p>
 
       <div className="mt-5 grid gap-4 lg:grid-cols-2">
         {open.map((r) => (

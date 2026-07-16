@@ -24,9 +24,12 @@ export default async function CoopWeaversPage({ searchParams }: { searchParams: 
 
   return (
     <PortalShell title="Cooperative Console" nav={COOP_NAV} userName={session?.name}>
-      <div className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="font-display text-2xl font-bold text-maroon-900">Weaver roster {status ? `— ${status.toLowerCase()}` : ""}</h1>
-        <Link href="/coop/weavers/new" className="btn-primary">📝 Register a weaver</Link>
+      <div className="flex items-end justify-between flex-wrap gap-3">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.25em] text-silk-700">Members</p>
+          <h1 className="font-display mt-1 text-3xl font-bold text-maroon-900">Weaver roster{status ? ` — ${status.toLowerCase()}` : ""}</h1>
+        </div>
+        <Link href="/coop/weavers/new" className="btn-primary">Register a weaver</Link>
       </div>
 
       <div className="card mt-5 overflow-x-auto">

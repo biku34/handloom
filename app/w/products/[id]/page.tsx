@@ -1,9 +1,10 @@
 import Link from "next/link";
 import PortalShell from "@/components/PortalShell";
+import { WEAVER_NAV } from "@/components/nav";
 import ProductActions from "./ProductActions";
 import { getSession } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
-import { Product, ProvenanceEvent } from "@/lib/models";
+import { Product, ProvenanceEvent, Claim } from "@/lib/models";
 import { mediaUrl } from "@/lib/storage";
 import mongoose from "mongoose";
 
@@ -15,11 +16,7 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
   await dbConnect();
   const product = mongoose.isValidObjectId(id) ? await Product.findById(id).lean<Record<string, any> | null>() : null;
 
-  const nav = [
-    { href: "/w/dashboard", label: "🏠 My work" },
-    { href: "/w/register", label: "➕ Register a piece" },
-    { href: "/w/insights", label: "📊 Who saw my work" },
-  ];
+  const nav = WEAVER_NAV;
 
   if (!product || (session?.role === "WEAVER" && String(product.weaverId) !== session.weaverId)) {
     return (
@@ -29,7 +26,10 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
     );
   }
 
-  const events = await ProvenanceEvent.find({ productId: product._id }).sort({ eventIndex: 1 }).lean<Record<string, any>[]>();
+  const events = product ? await ProvenanceEvent.find({ productId: product._id }).sort({ eventIndex: 1 }).lean<Record<string, any>[]>() : [];
+  const claim = product?.authenticity?.claimedByConsumer
+    ? await Claim.findOne({ productId: product._id, status: "CLAIMED" }).sort({ claimedAt: -1 }).lean<Record<string, any> | null>()
+    : null;
 
   return (
     <PortalShell title="Weaver" nav={nav} userName={session?.name}>
@@ -62,6 +62,7 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
                   <span className="font-mono text-xs text-stone-400 shrink-0">#{e.eventIndex}</span>
                   <span className="font-semibold text-maroon-800">{e.eventType.replace(/_/g, " ")}</span>
                   <span className="text-stone-500 text-xs">{new Date(e.occurredAt).toLocaleDateString("en-IN")}</span>
+                  {e.actor?.displayName && <span className="text-stone-400 text-xs truncate">by {e.actor.displayName}</span>}
                   {e.detail?.note && <span className="text-stone-500 text-xs truncate">— {e.detail.note}</span>}
                 </li>
               ))}
@@ -80,9 +81,22 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
             </div>
           ) : null}
           <ProductActions productId={String(product._id)} status={product.status} frozen={!!product.passport?.frozen} />
+          {product.authenticity?.claimedByConsumer && (
+            <div className="card p-5 bg-leaf-600/5 border-leaf-600/25">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-leaf-700">Found its home</p>
+              <p className="font-display mt-1.5 text-lg font-bold text-maroon-900">
+                {claim?.claimantName || "An anonymous buyer"}
+              </p>
+              <p className="mt-1 text-xs text-stone-500">
+                claimed this piece
+                {claim?.claimedAt ? ` on ${new Date(claim.claimedAt).toLocaleDateString("en-IN", { day: "numeric", month: "long", year: "numeric" })}` : ""}.
+                Your work is now part of their story.
+              </p>
+            </div>
+          )}
           <div className="card p-4 text-xs text-stone-500">
             <p><strong>Scans:</strong> {product.stats?.scanCount ?? 0}</p>
-            <p className="mt-1"><strong>Claimed:</strong> {product.authenticity?.claimedByConsumer ? "Yes 💚" : "Not yet"}</p>
+            <p className="mt-1"><strong>Claimed:</strong> {product.authenticity?.claimedByConsumer ? `Yes — ${claim?.claimantName || "name not shared"}` : "Not yet"}</p>
             {product.authenticity?.riskScore > 0 && <p className="mt-1"><strong>Risk score:</strong> {product.authenticity.riskScore}</p>}
           </div>
         </aside>

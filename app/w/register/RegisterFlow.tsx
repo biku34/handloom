@@ -112,8 +112,8 @@ export default function RegisterFlow({ defaultCraftCode }: { defaultCraftCode?: 
   if (step === 5 && done) {
     return (
       <div className="card p-6 text-center">
-        <div className="text-5xl">🎉</div>
-        <h2 className="font-display mt-3 text-2xl font-bold text-maroon-900">
+        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-leaf-600 text-white text-3xl">✓</div>
+        <h2 className="font-display mt-4 text-2xl font-bold text-maroon-900">
           {done.minted ? "Passport issued!" : "Piece registered!"}
         </h2>
         {done.minted ? (
@@ -157,7 +157,8 @@ export default function RegisterFlow({ defaultCraftCode }: { defaultCraftCode?: 
       {/* Tap 1 — photo on the loom */}
       {step === 1 && (
         <div className="card p-6 text-center">
-          <h2 className="font-display text-xl font-bold text-maroon-900">📷 Photo of the piece on your loom</h2>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-silk-700">Step one</p>
+          <h2 className="font-display mt-1 text-xl font-bold text-maroon-900">Photo of the piece on your loom</h2>
           <p className="mt-1 text-sm text-stone-500">The single most convincing proof — your work, on your loom, in your hands.</p>
           <label className="mt-5 block cursor-pointer">
             {photoPreview ? (
@@ -192,7 +193,8 @@ export default function RegisterFlow({ defaultCraftCode }: { defaultCraftCode?: 
       {/* Tap 2 — craft */}
       {step === 2 && (
         <div className="card p-6">
-          <h2 className="font-display text-xl font-bold text-maroon-900 text-center">🧵 What craft is this?</h2>
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.25em] text-silk-700">Step two</p>
+          <h2 className="font-display mt-1 text-xl font-bold text-maroon-900 text-center">What craft is this?</h2>
           <div className="mt-5 grid grid-cols-3 gap-3">
             {CRAFTS.map((c) => (
               <button
@@ -211,7 +213,8 @@ export default function RegisterFlow({ defaultCraftCode }: { defaultCraftCode?: 
       {/* Tap 3 — category */}
       {step === 3 && (
         <div className="card p-6">
-          <h2 className="font-display text-xl font-bold text-maroon-900 text-center">🥻 What did you weave?</h2>
+          <p className="text-center text-[11px] font-semibold uppercase tracking-[0.25em] text-silk-700">Step three</p>
+          <h2 className="font-display mt-1 text-xl font-bold text-maroon-900 text-center">What did you weave?</h2>
           <div className="mt-5 grid grid-cols-3 gap-3">
             {CATEGORIES.map((c) => (
               <button
@@ -230,7 +233,8 @@ export default function RegisterFlow({ defaultCraftCode }: { defaultCraftCode?: 
       {/* Tap 4 — voice note */}
       {step === 4 && (
         <div className="card p-6 text-center">
-          <h2 className="font-display text-xl font-bold text-maroon-900">🎙️ Tell us about this piece</h2>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.25em] text-silk-700">Step four</p>
+          <h2 className="font-display mt-1 text-xl font-bold text-maroon-900">Tell us about this piece</h2>
           <p className="mt-1 text-sm text-stone-500">In your own language: how long it took, what makes it special. Buyers will hear your voice.</p>
           <button
             onClick={recording ? stopRecording : startRecording}

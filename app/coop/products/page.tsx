@@ -15,8 +15,9 @@ export default async function CoopProductsPage() {
 
   return (
     <PortalShell title="Cooperative Console" nav={COOP_NAV} userName={session?.name}>
-      <h1 className="font-display text-2xl font-bold text-maroon-900">Products & custody</h1>
-      <p className="mt-1 mb-5 text-sm text-stone-600">
+      <p className="text-xs font-semibold uppercase tracking-[0.25em] text-silk-700">Chain of custody</p>
+      <h1 className="font-display mt-1 text-3xl font-bold text-maroon-900">Products & custody</h1>
+      <p className="mt-1.5 mb-5 text-sm text-stone-600">
         Select passported items and dispatch them to a retailer. Dispatch records a custody event and permanently seals each record.
       </p>
       <CustodyPanel
@@ -27,6 +28,7 @@ export default async function CoopProductsPage() {
           status: p.status,
           holder: [p.custody?.currentHolderType, p.custody?.currentHolderName].filter(Boolean).join(": "),
           frozen: !!p.passport?.frozen,
+          dispatchable: p.status === "MINTED" && !["RETAILER", "CONSUMER"].includes(p.custody?.currentHolderType),
         }))}
       />
     </PortalShell>

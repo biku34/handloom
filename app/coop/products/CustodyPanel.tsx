@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 
-export default function CustodyPanel({ products }: { products: { _id: string; passportId: string; name: string; status: string; holder: string; frozen: boolean }[] }) {
+export default function CustodyPanel({ products }: { products: { _id: string; passportId: string; name: string; status: string; holder: string; frozen: boolean; dispatchable: boolean }[] }) {
   const router = useRouter();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [toHolderName, setToHolderName] = useState("");
@@ -30,7 +30,11 @@ export default function CustodyPanel({ products }: { products: { _id: string; pa
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.title || "Transfer failed");
-      setMsg(`✓ Dispatched ${data.transferred} item(s) to ${toHolderName}. Their records are now sealed.`);
+      const failed = (data.results || []).filter((r: { ok: boolean }) => !r.ok);
+      const failNote = failed.length
+        ? ` ${failed.length} skipped: ${failed.map((f: { error?: string }) => f.error).join("; ")}.`
+        : "";
+      setMsg(`Dispatched ${data.transferred} item(s) to ${toHolderName}. Their records are now sealed.${failNote}`);
       setSelected(new Set());
       setToHolderName("");
       router.refresh();
@@ -58,9 +62,15 @@ export default function CustodyPanel({ products }: { products: { _id: string; pa
           </thead>
           <tbody className="divide-y divide-silk-100">
             {products.map((p) => (
-              <tr key={p._id} className={selected.has(p._id) ? "bg-silk-50" : ""}>
+              <tr key={p._id} className={selected.has(p._id) ? "bg-silk-50" : !p.dispatchable ? "opacity-55" : ""}>
                 <td className="px-4 py-3">
-                  <input type="checkbox" checked={selected.has(p._id)} onChange={() => toggle(p._id)} disabled={p.status !== "MINTED"} />
+                  <input
+                    type="checkbox"
+                    checked={selected.has(p._id)}
+                    onChange={() => toggle(p._id)}
+                    disabled={!p.dispatchable}
+                    title={p.dispatchable ? "" : "Already dispatched — an item leaves the cooperative only once"}
+                  />
                 </td>
                 <td className="px-4 py-3 font-semibold text-maroon-900">{p.name}</td>
                 <td className="px-4 py-3 font-mono text-xs text-stone-500">
@@ -68,7 +78,13 @@ export default function CustodyPanel({ products }: { products: { _id: string; pa
                 </td>
                 <td className="px-4 py-3">{p.status}</td>
                 <td className="px-4 py-3 text-stone-600">{p.holder}</td>
-                <td className="px-4 py-3">{p.frozen ? "🔒 sealed" : "editable"}</td>
+                <td className="px-4 py-3">
+                  {p.frozen ? (
+                    <span className="rounded-full bg-silk-100 border border-silk-300 px-2.5 py-0.5 text-[11px] font-bold text-maroon-800">sealed</span>
+                  ) : (
+                    <span className="text-stone-400 text-xs">editable</span>
+                  )}
+                </td>
               </tr>
             ))}
             {products.length === 0 && (
@@ -84,7 +100,7 @@ export default function CustodyPanel({ products }: { products: { _id: string; pa
           <input className="input" value={toHolderName} onChange={(e) => setToHolderName(e.target.value)} placeholder="e.g. Nalli Silks, T. Nagar" />
         </div>
         <button className="btn-primary" disabled={busy || selected.size === 0 || !toHolderName.trim()}>
-          {busy ? "Dispatching…" : `📦 Dispatch ${selected.size || ""} item(s) — seals records`}
+          {busy ? "Dispatching…" : `Dispatch ${selected.size || ""} item(s) — seals records`}
         </button>
       </form>
     </div>

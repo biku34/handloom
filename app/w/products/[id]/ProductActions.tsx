@@ -67,7 +67,7 @@ export default function ProductActions({ productId, status, frozen }: { productI
       )}
       {status !== "MINTED" && status !== "FLAGGED" && status !== "VOID" && (
         <button onClick={mint} disabled={busy} className="btn-green w-full">
-          {busy ? "Issuing…" : "🎫 Issue the Digital Passport"}
+          {busy ? "Issuing…" : "Issue the Digital Passport"}
         </button>
       )}
       {(status === "MINTED" || status === "FLAGGED") && !frozen && (
@@ -84,7 +84,7 @@ export default function ProductActions({ productId, status, frozen }: { productI
       )}
       {frozen && (
         <p className="rounded-xl bg-silk-100 border border-silk-300 px-4 py-3 text-sm text-stone-600">
-          🔒 This record was sealed at dispatch and can no longer be changed — that is the guarantee buyers rely on.
+          This record was sealed at dispatch and can no longer be changed — that is the guarantee buyers rely on.
         </p>
       )}
     </div>
