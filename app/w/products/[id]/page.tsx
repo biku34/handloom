@@ -4,9 +4,11 @@ import { WEAVER_NAV } from "@/components/nav";
 import ProductActions from "./ProductActions";
 import { getSession } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
-import { Product, ProvenanceEvent, Claim, MaterialLot } from "@/lib/models";
+import { Product, ProvenanceEvent, Claim, MaterialLot, Certificate } from "@/lib/models";
 import { mediaUrl } from "@/lib/storage";
 import MaterialsPanel from "./MaterialsPanel";
+import EnrichForm from "./EnrichForm";
+import CertificatesPanel from "./CertificatesPanel";
 import mongoose from "mongoose";
 
 export const dynamic = "force-dynamic";
@@ -32,6 +34,8 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
     ? await Claim.findOne({ productId: product._id, status: "CLAIMED" }).sort({ claimedAt: -1 }).lean<Record<string, any> | null>()
     : null;
   const lots = await MaterialLot.find({ weaverId: product.weaverId, remainingGrams: { $gt: 0 } }).sort({ createdAt: -1 }).lean<Record<string, any>[]>();
+  const certs = await Certificate.find({ productId: product._id }).lean<Record<string, any>[]>();
+  const productPlain = JSON.parse(JSON.stringify(product));
 
   return (
     <PortalShell title="Weaver" nav={nav} userName={session?.name}>
@@ -54,6 +58,17 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
                 <audio className="mt-3 w-full" controls src={mediaUrl(product.media.voiceNoteAssetId)!} />
               )}
             </div>
+          </div>
+
+          <div className="mt-5">
+            <EnrichForm productId={String(product._id)} product={productPlain} frozen={!!product.passport?.frozen} />
+          </div>
+
+          <div className="mt-5">
+            <CertificatesPanel
+              productId={String(product._id)}
+              certificates={certs.map((c) => ({ type: c.type, number: c.number, issuedBy: c.issuedBy }))}
+            />
           </div>
 
           <div className="card mt-5 p-5">

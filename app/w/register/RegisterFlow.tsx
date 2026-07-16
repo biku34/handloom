@@ -136,9 +136,13 @@ export default function RegisterFlow({ defaultCraftCode }: { defaultCraftCode?: 
             Saved. The passport will be issued once your verification is complete — your cooperative has been notified.
           </p>
         )}
-        <div className="mt-6 flex gap-3">
+        <Link href={`/w/products/${done.productId}`} className="btn-primary mt-6 w-full">
+          Add full details & story →
+        </Link>
+        <p className="mt-2 text-xs text-stone-400">Dimensions, weave, price, certificates and the story make your page richer.</p>
+        <div className="mt-4 flex gap-3">
           <Link href={`/p/${done.passportId}`} className="btn-secondary flex-1">View public page</Link>
-          <Link href="/w/dashboard" className="btn-primary flex-1">Done</Link>
+          <Link href="/w/dashboard" className="btn-secondary flex-1">Done</Link>
         </div>
       </div>
     );
