@@ -39,9 +39,12 @@ export function hashTagSecret(secret: string): string {
   return hmacSha256(key, secret.toUpperCase());
 }
 
-/** Deterministic hash of any JSON payload (sorted keys). */
+/** Deterministic hash of any JSON payload (sorted keys).
+ *  Normalizes through JSON first so Mongoose documents/subdocuments (which
+ *  carry internal circular references) collapse to plain data before hashing. */
 export function canonicalHash(payload: unknown): string {
-  return sha256(canonicalJson(payload));
+  const plain = payload === undefined ? null : JSON.parse(JSON.stringify(payload));
+  return sha256(canonicalJson(plain));
 }
 
 export function canonicalJson(value: unknown): string {
