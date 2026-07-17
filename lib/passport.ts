@@ -1,8 +1,9 @@
 import { dbConnect } from "./db";
-import { Product, Weaver, Tag, Certificate, ProvenanceEvent, MediaAsset } from "./models";
+import { Product, Weaver, Tag, Certificate, ProvenanceEvent, MediaAsset, LedgerEntry } from "./models";
 import { appendLedgerEntry } from "./ledger";
 import { sha256, generateTagSecret, hashTagSecret } from "./hash";
 import { mediaUrl } from "./storage";
+import { explorerTxUrl, isChainEnabled, chainNetworkName } from "./chain";
 
 /* ── PassportService: issue, freeze, tag, and the public projection ── */
 
@@ -133,6 +134,24 @@ export async function buildPassportView(passportId: string) {
   const certs = await Certificate.find({ productId: product._id }).lean<Record<string, any>[]>();
   const events = await ProvenanceEvent.find({ productId: product._id }).sort({ eventIndex: 1 }).lean<Record<string, any>[]>();
 
+  // On-chain anchors for this product's ledger entries (journey + issue/freeze/claim).
+  const relatedSeqs = [
+    ...events.map((e) => e.ledger?.entrySeq),
+    product.passport?.entrySeq,
+    product.passport?.freezeEntrySeq,
+  ].filter((s): s is number => typeof s === "number");
+  const ledgerBySeq = new Map<number, Record<string, any>>();
+  if (relatedSeqs.length) {
+    const led = await LedgerEntry.find({ seq: { $in: relatedSeqs } }).lean<Record<string, any>[]>();
+    led.forEach((l) => ledgerBySeq.set(l.seq, l));
+  }
+  const chainOf = (seq?: number | null) => {
+    const l = seq != null ? ledgerBySeq.get(seq) : null;
+    const c = l?.chain;
+    if (!c || c.status === "LOCAL") return null;
+    return { status: c.status, network: c.network, txHash: c.txHash ?? null, blockNumber: c.blockNumber ?? null, explorerUrl: explorerTxUrl(c.txHash) };
+  };
+
   const a = product.authenticity || {};
   let verdictStatus: "GENUINE" | "PENDING" | "FLAGGED" | "VOIDED" = "GENUINE";
   const warnings: string[] = [];
@@ -230,16 +249,20 @@ export async function buildPassportView(passportId: string) {
         location: e.detail?.location,
         media: (e.detail?.mediaAssetIds || []).map((m: unknown) => mediaUrl(m as string)),
         ledgerSeq: e.ledger?.entrySeq ?? null,
+        chain: chainOf(e.ledger?.entrySeq),
       })),
     },
     proof: {
-      ledger: "SUTRA Integrity Ledger (local)",
+      ledger: "SUTRA Integrity Ledger",
       entrySeq: product.passport?.entrySeq ?? null,
       recordHash: product.passport?.recordHash ?? null,
       mediaHash: product.media?.mediaHash ?? null,
       materialHash: product.materialHash ?? null,
       sealed: !!product.passport?.frozen,
       sealedAt: product.passport?.frozenAt ?? null,
+      chainEnabled: isChainEnabled(),
+      chainNetwork: isChainEnabled() ? chainNetworkName() : null,
+      issueChain: chainOf(product.passport?.entrySeq),
     },
     ownership: { claimed: !!a.claimedByConsumer, claimedAt: a.claimedAt || null },
     custody: { currentHolderType: product.custody?.currentHolderType, currentHolderName: product.custody?.currentHolderName },

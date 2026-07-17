@@ -6,6 +6,7 @@ import { getSession } from "@/lib/auth";
 import { dbConnect } from "@/lib/db";
 import { Weaver, Product, Scan, FraudReport, LedgerEntry } from "@/lib/models";
 import { verifyLedgerChain } from "@/lib/ledger";
+import { isChainEnabled, chainNetworkName, chainProviderName, walletBalance, explorerAddressUrl } from "@/lib/chain";
 
 export const dynamic = "force-dynamic";
 
@@ -23,6 +24,16 @@ export default async function AdminDashboard() {
     verifyLedgerChain(),
   ]);
   const recentLedger = await LedgerEntry.find().sort({ seq: -1 }).limit(10).lean<Record<string, any>[]>();
+
+  const chainOn = isChainEnabled();
+  const [onChain, chainPending, chainFailed, wallet] = chainOn
+    ? await Promise.all([
+        LedgerEntry.countDocuments({ "chain.status": "CONFIRMED" }),
+        LedgerEntry.countDocuments({ "chain.status": "PENDING" }),
+        LedgerEntry.countDocuments({ "chain.status": "FAILED" }),
+        walletBalance(),
+      ])
+    : [0, 0, 0, null];
 
   const stats: [number, string, string, string][] = [
     [weavers, "Weavers", "/coop/weavers", "users"],
@@ -48,6 +59,32 @@ export default async function AdminDashboard() {
         {chain.intact
           ? `Integrity ledger verified live — ${chain.checked} entries recomputed, hash chain intact.`
           : `LEDGER CHAIN BROKEN at entry #${chain.brokenAtSeq}.`}
+      </div>
+
+      {/* Public blockchain anchoring status */}
+      <div className={`mt-3 rounded-xl border px-5 py-4 ${chainOn ? "bg-maroon-900 text-silk-100 border-maroon-800" : "bg-silk-50 border-silk-200"}`}>
+        {chainOn ? (
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
+            <span className="flex items-center gap-2 font-semibold">
+              <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-silk-200 text-maroon-900 text-xs">⛓</span>
+              On-chain anchoring: <span className="text-leaf-300">{chainNetworkName()}</span>
+              <span className="text-silk-200/70 font-normal">via {chainProviderName()}</span>
+            </span>
+            <span>{onChain.toLocaleString()} confirmed</span>
+            {chainPending > 0 && <span className="text-amber-300">{chainPending} pending</span>}
+            {chainFailed > 0 && <span className="text-red-300">{chainFailed} failed</span>}
+            {wallet && (
+              <a href={explorerAddressUrl(wallet.address) || "#"} target="_blank" rel="noopener noreferrer" className="ml-auto text-xs font-mono opacity-80 hover:opacity-100">
+                wallet {wallet.address.slice(0, 8)}… · {wallet.balance} POL ↗
+              </a>
+            )}
+          </div>
+        ) : (
+          <p className="text-sm text-stone-600">
+            <strong className="text-maroon-900">On-chain anchoring is off.</strong> Records use the local hash-chained ledger only.
+            To publish every action to Polygon automatically, see <span className="font-mono text-xs">BLOCKCHAIN.md</span>.
+          </p>
+        )}
       </div>
 
       <div className="mt-6 grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">

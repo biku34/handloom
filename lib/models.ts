@@ -441,9 +441,20 @@ const LedgerEntrySchema = new Schema(
     entryHash: { type: String, required: true }, // sha256(seq ‖ type ‖ dataHash ‖ prevHash ‖ at)
     at: { type: Date, default: Date.now },
     summary: String,
+    // Public-chain anchor (Polygon). LOCAL until anchored; automated in the backend.
+    chain: {
+      status: { type: String, enum: ["LOCAL", "PENDING", "CONFIRMED", "FAILED"], default: "LOCAL" },
+      network: String,
+      txHash: String,
+      blockNumber: Number,
+      anchoredAt: Date,
+      error: String,
+      attempts: { type: Number, default: 0 },
+    },
   },
   { timestamps: true }
 );
+LedgerEntrySchema.index({ "chain.status": 1 });
 
 /* ── auditLog (append-only) ── */
 const AuditLogSchema = new Schema(

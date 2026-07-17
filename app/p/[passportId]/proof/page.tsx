@@ -32,7 +32,8 @@ export default async function ProofPage({ params }: { params: Promise<{ passport
     $or: [{ entityId: passportId }, { entityId: new RegExp(`^${passportId}#`) }],
   })
     .sort({ seq: 1 })
-    .lean<{ seq: number; type: string; dataHash: string; prevHash: string; entryHash: string; at: Date; summary: string }[]>();
+    .lean<{ seq: number; type: string; dataHash: string; prevHash: string; entryHash: string; at: Date; summary: string; chain?: { status?: string; network?: string; txHash?: string; blockNumber?: number } }[]>();
+  const proof = view.proof as typeof view.proof & { chainEnabled?: boolean; chainNetwork?: string | null };
   const chain = await verifyLedgerChain();
 
   return (
@@ -44,8 +45,9 @@ export default async function ProofPage({ params }: { params: Promise<{ passport
       <p className="mt-2 text-sm leading-relaxed text-stone-600">
         Every meaningful claim about this item is committed to an <strong>append-only, hash-chained integrity ledger</strong>.
         Each entry contains the SHA-256 hash of the previous entry, so editing any historical record breaks every hash that follows it.
-        In the full deployment these anchors are also written to a public blockchain (Polygon); this pilot build keeps the same
-        structure in a local ledger.
+        {proof.chainEnabled
+          ? ` Each entry is also written to ${proof.chainNetwork}, a public blockchain — so you can verify it without trusting our servers at all.`
+          : " In the full deployment each entry is also written to a public blockchain (Polygon)."}
       </p>
 
       <div className={`mt-5 rounded-xl px-4 py-3 text-sm font-semibold ${chain.intact ? "bg-leaf-600/10 text-leaf-700 border border-leaf-600/30" : "bg-red-100 text-red-800 border border-red-300"}`}>
@@ -53,6 +55,13 @@ export default async function ProofPage({ params }: { params: Promise<{ passport
           ? `✓ Full chain verified just now — ${chain.checked} entries recomputed, all hashes consistent.`
           : `✕ CHAIN BROKEN at entry #${chain.brokenAtSeq} — the ledger has been tampered with.`}
       </div>
+
+      {proof.chainEnabled && (
+        <div className="mt-3 flex items-center gap-2 rounded-xl bg-maroon-900 text-silk-100 px-4 py-3 text-sm">
+          <span className="inline-flex h-5 w-5 items-center justify-center rounded bg-silk-200 text-maroon-900 text-xs">⛓</span>
+          Anchored on <strong>{proof.chainNetwork}</strong> — each record below links to its public transaction.
+        </div>
+      )}
 
       <div className="card mt-5 divide-y divide-silk-200">
         <div className="px-5 py-3 text-xs font-bold uppercase tracking-wide text-silk-700">Record summary</div>
@@ -86,6 +95,14 @@ export default async function ProofPage({ params }: { params: Promise<{ passport
               <div><dt className="inline text-stone-500">prev: </dt><dd className="inline">{e.prevHash}</dd></div>
               <div><dt className="inline text-stone-500">entry: </dt><dd className="inline">{e.entryHash}</dd></div>
             </dl>
+            {e.chain?.status === "CONFIRMED" && e.chain.txHash ? (
+              <a href={`${e.chain.network === "Polygon" ? "https://polygonscan.com" : "https://amoy.polygonscan.com"}/tx/${e.chain.txHash}`} target="_blank" rel="noopener noreferrer"
+                 className="mt-2 inline-flex items-center gap-1.5 text-[11px] font-semibold text-leaf-700 hover:underline">
+                ⛓ {e.chain.network} · block {e.chain.blockNumber?.toLocaleString()} · view tx ↗
+              </a>
+            ) : e.chain?.status === "PENDING" ? (
+              <p className="mt-2 text-[11px] text-amber-700">⛓ writing to chain…</p>
+            ) : null}
           </div>
         ))}
         {entries.length === 0 && <p className="text-sm text-stone-500">No ledger entries yet — the passport has not been issued.</p>}

@@ -128,23 +128,68 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
 
           {/* ── MAIN: the product ── */}
           <div className="space-y-6">
-            {mainImage && (
-              <section className="card overflow-hidden">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+            {/* full-size photo */}
+            <section className="card overflow-hidden">
+              {mainImage ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img src={mainImage} alt={product.name || "The piece"} className="w-full max-h-[560px] object-cover" />
-                <div className="px-5 py-4">
-                  <p className="text-sm font-semibold text-maroon-800">
-                    {[
-                      product.production?.loomHours ? `${product.production.loomHours} hours at the loom` : null,
-                      product.specs?.weaveTechnique ? `${product.specs.weaveTechnique.charAt(0) + product.specs.weaveTechnique.slice(1).toLowerCase()} weave` : null,
-                      product.specs?.zariType ? "Pure zari" : null,
-                    ]
-                      .filter(Boolean)
-                      .join(" · ") || "Photographed where it was woven"}
-                  </p>
-                </div>
-              </section>
-            )}
+              ) : (
+                <div className="w-full h-64 bg-silk-100 flex items-center justify-center text-6xl">🧵</div>
+              )}
+              <div className="px-5 py-4">
+                <p className="text-sm font-semibold text-maroon-800">
+                  {[
+                    product.production?.loomHours ? `${product.production.loomHours} hours at the loom` : null,
+                    product.specs?.weaveTechnique ? `${product.specs.weaveTechnique.charAt(0) + product.specs.weaveTechnique.slice(1).toLowerCase()} weave` : null,
+                    product.specs?.zariType ? "Pure zari" : null,
+                  ]
+                    .filter(Boolean)
+                    .join(" · ") || "Photographed where it was woven"}
+                </p>
+              </div>
+            </section>
+
+            {/* primary actions — 3 compact columns */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <Link
+                href={`/p/${passportId}/journey`}
+                className="card group px-4 py-3.5 transition-all hover:-translate-y-0.5 hover:border-maroon-600"
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-silk-700">Provenance</span>
+                <span className="mt-0.5 block font-bold text-sm text-maroon-900">See the full journey</span>
+                <span className="text-xs text-stone-400 group-hover:text-maroon-700 transition-colors">{journey.stepCount} steps →</span>
+              </Link>
+
+              <Link
+                href={`/p/${passportId}/claim`}
+                className={`px-4 py-3.5 rounded-2xl transition-all hover:-translate-y-0.5 ${
+                  ownership.claimed ? "bg-leaf-600/10 border border-leaf-600/30" : "bg-maroon-700 shadow-md hover:bg-maroon-800"
+                }`}
+              >
+                {ownership.claimed ? (
+                  <>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-leaf-700">Ownership</span>
+                    <span className="mt-0.5 block font-bold text-sm text-maroon-900">Claimed ✓</span>
+                    <span className="text-xs text-stone-500">Found its home</span>
+                  </>
+                ) : (
+                  <>
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-silk-200/80">Just bought this?</span>
+                    <span className="mt-0.5 block font-bold text-sm text-white">Claim your piece →</span>
+                    <span className="text-xs text-silk-100/70">Become the owner</span>
+                  </>
+                )}
+              </Link>
+
+              <Link
+                href={`/p/${passportId}/proof`}
+                className="card group px-4 py-3.5 transition-all hover:-translate-y-0.5 hover:border-maroon-600"
+              >
+                <span className="text-[10px] font-semibold uppercase tracking-[0.15em] text-silk-700">Independent</span>
+                <span className="mt-0.5 block font-bold text-sm text-maroon-900">Verify the proof</span>
+                <span className="text-xs text-stone-400 group-hover:text-maroon-700 transition-colors">on the public chain ↗</span>
+              </Link>
+            </div>
 
             {product.voiceNoteUrl && (
               <AudioPlayer src={product.voiceNoteUrl} label="The weaver, about this piece" />
@@ -297,22 +342,6 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
                 ))}
               </div>
             )}
-
-            {/* deeper paths */}
-            <nav className="space-y-2.5">
-              <Link href={`/p/${passportId}/journey`} className="card flex items-center justify-between px-5 py-4 hover:border-maroon-600">
-                <span className="font-semibold text-maroon-900">See the full journey</span>
-                <span className="text-stone-400">{journey.stepCount} steps →</span>
-              </Link>
-              <Link href={`/p/${passportId}/claim`} className={`flex items-center justify-between px-5 py-4 rounded-2xl ${ownership.claimed ? "card" : "bg-maroon-700 text-white hover:bg-maroon-800 transition-colors"}`}>
-                <span className={`font-semibold ${ownership.claimed ? "text-maroon-900" : "text-white"}`}>{ownership.claimed ? "Ownership" : "I bought this — claim it"}</span>
-                <span className={ownership.claimed ? "text-stone-400" : "text-silk-200"}>{ownership.claimed ? "claimed ✓" : "→"}</span>
-              </Link>
-              <Link href={`/p/${passportId}/proof`} className="flex items-center justify-between px-5 py-3 text-sm text-stone-500 hover:text-maroon-800">
-                <span>Verify the proof yourself</span>
-                <span>↗</span>
-              </Link>
-            </nav>
           </div>
         </div>
 

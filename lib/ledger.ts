@@ -1,12 +1,29 @@
 import { LedgerEntry } from "./models";
 import { sha256, canonicalHash } from "./hash";
+import { isChainEnabled, anchorOnChain } from "./chain";
 
 /*
- * The SUTRA integrity ledger — the local stand-in for the blockchain layer.
- * Append-only and hash-chained: entry N commits to entry N-1's hash, so any
- * after-the-fact edit of an old entry invalidates every entry that follows.
- * The public proof page recomputes and displays this chain.
+ * The SUTRA integrity ledger — hash-chained locally AND anchored to a public
+ * blockchain (Polygon) when configured. Append-only: entry N commits to entry
+ * N-1's hash, so editing an old entry invalidates every entry after it. When a
+ * chain wallet is configured, each entry's hash is also written on-chain by the
+ * platform (no user ever signs) so anyone can verify it independently.
  */
+
+/** Anchor one entry's hash on-chain in the background and record the result. */
+export async function anchorLedgerEntry(entryId: string, entryHash: string): Promise<void> {
+  if (!isChainEnabled()) return;
+  await LedgerEntry.updateOne({ _id: entryId }, { $set: { "chain.status": "PENDING" }, $inc: { "chain.attempts": 1 } });
+  const res = await anchorOnChain(entryHash);
+  if (res.ok) {
+    await LedgerEntry.updateOne(
+      { _id: entryId },
+      { $set: { "chain.status": "CONFIRMED", "chain.txHash": res.txHash, "chain.blockNumber": res.blockNumber, "chain.network": res.network, "chain.anchoredAt": new Date(), "chain.error": null } }
+    );
+  } else {
+    await LedgerEntry.updateOne({ _id: entryId }, { $set: { "chain.status": "FAILED", "chain.error": res.error } });
+  }
+}
 
 export async function appendLedgerEntry(opts: {
   type: string;
@@ -34,7 +51,13 @@ export async function appendLedgerEntry(opts: {
         entryHash,
         at,
         summary: opts.summary,
+        chain: { status: isChainEnabled() ? "PENDING" : "LOCAL" },
       });
+      // Fire-and-forget: anchor on-chain in the background so the user's action
+      // is never blocked by ~2s block time (SRS §3.3 async write pipeline).
+      if (isChainEnabled()) {
+        void anchorLedgerEntry(String(entry._id), entryHash);
+      }
       return entry;
     } catch (e: unknown) {
       const err = e as { code?: number };

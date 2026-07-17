@@ -47,7 +47,7 @@ export default async function JourneyPage({ params }: { params: Promise<{ passpo
         <p className="mt-1 text-sm text-stone-600">{view.product.name}</p>
 
       <ol className="mt-6 relative border-l-2 border-silk-300 pl-6 space-y-7">
-        {view.journey.steps.map((step: { eventType: string; occurredAt: string | Date; recordedAt?: string | Date; actor?: string; actorType?: string; note?: string; location?: string; ledgerSeq?: number | null }, i: number) => {
+        {view.journey.steps.map((step: { eventType: string; occurredAt: string | Date; recordedAt?: string | Date; actor?: string; actorType?: string; note?: string; location?: string; ledgerSeq?: number | null; chain?: { status: string; network?: string; txHash?: string | null; blockNumber?: number | null; explorerUrl?: string | null } | null }, i: number) => {
           const meta = EVENT_META[step.eventType] ?? { icon: "•", label: step.eventType };
           const occurred = new Date(step.occurredAt);
           const recorded = step.recordedAt ? new Date(step.recordedAt) : null;
@@ -75,9 +75,26 @@ export default async function JourneyPage({ params }: { params: Promise<{ passpo
                     Recorded {Math.round(gapHours / 24)} day(s) after it happened — weaving villages often have limited network. Both times are shown for honesty.
                   </p>
                 )}
-                {step.ledgerSeq != null && (
+                {/* On-chain block for this step */}
+                {step.chain?.status === "CONFIRMED" ? (
+                  <a
+                    href={step.chain.explorerUrl || "#"}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="mt-3 flex items-center gap-2 rounded-lg bg-leaf-600/8 border border-leaf-600/25 px-3 py-2 text-[11px] text-leaf-700 hover:bg-leaf-600/12 transition-colors"
+                  >
+                    <span className="inline-flex h-4 w-4 items-center justify-center rounded bg-leaf-600 text-white text-[9px]">⛓</span>
+                    <span className="font-semibold">On {step.chain.network} · block {step.chain.blockNumber?.toLocaleString()}</span>
+                    <span className="ml-auto font-mono truncate max-w-[140px]">{step.chain.txHash?.slice(0, 10)}…</span>
+                    <span>↗</span>
+                  </a>
+                ) : step.chain?.status === "PENDING" ? (
+                  <p className="mt-3 flex items-center gap-2 rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-[11px] text-amber-800">
+                    <span className="inline-block h-2 w-2 rounded-full bg-amber-500 animate-pulse" /> Writing to the public chain…
+                  </p>
+                ) : step.ledgerSeq != null ? (
                   <p className="mt-2 text-[11px] text-stone-400 font-mono">ledger entry #{step.ledgerSeq}</p>
-                )}
+                ) : null}
               </div>
             </li>
           );
