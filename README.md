@@ -3,7 +3,7 @@
 Local build of the SUTRA SRS (v1.0): a Next.js website on a local MongoDB, with
 **optional** on-chain anchoring to Polygon via Alchemy (off by default).
 
-## What's swapped vs the SRS
+## SRS
 
 | SRS component | This build |
 |---|---|
