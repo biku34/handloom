@@ -45,17 +45,19 @@ export default function InstallPrompt() {
     }
     if (standalone) return;
 
-    // Respect a recent dismissal (now just one hour).
+    // Registering the SW is what makes Chrome evaluate installability and fire
+    // `beforeinstallprompt`. Do this ALWAYS (even if the banner was dismissed),
+    // so the "Install app" button on the page can still install.
+    navigator.serviceWorker.register("/sw.js").catch(() => {});
+
+    // Respect a recent dismissal of THIS banner (now just one hour). The page's
+    // own install button is unaffected by this.
     try {
       const at = Number(localStorage.getItem(DISMISS_KEY) || 0);
       if (at && Date.now() - at < DISMISS_MS) return;
     } catch {
       /* storage blocked — carry on */
     }
-
-    // Registering the SW is what makes Chrome evaluate installability and then
-    // fire `beforeinstallprompt`.
-    navigator.serviceWorker.register("/sw.js").catch(() => {});
 
     // The event may already have fired (before this component mounted) and been
     // stashed by the early capture script in the layout. Pick it up if so.
