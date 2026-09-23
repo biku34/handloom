@@ -11,6 +11,41 @@ self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim(
 // requests go to the network as normal.
 self.addEventListener("fetch", () => {});
 
+function b64ToU8(base64) {
+  const pad = "=".repeat((4 - (base64.length % 4)) % 4);
+  const s = (base64 + pad).replace(/-/g, "+").replace(/_/g, "/");
+  const raw = atob(s);
+  const out = new Uint8Array(raw.length);
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
+  return out;
+}
+
+// The browser fires this when it invalidates a subscription (push service
+// rotation, or the VAPID key changed). Without handling it, the device goes
+// silently unsubscribed. We re-subscribe with the current server key and
+// re-register it, so opt-ins stay persistent across key changes.
+self.addEventListener("pushsubscriptionchange", (event) => {
+  event.waitUntil(
+    (async () => {
+      try {
+        const cfg = await fetch("/api/push/subscribe").then((r) => r.json());
+        if (!cfg || !cfg.enabled || !cfg.publicKey) return;
+        const sub = await self.registration.pushManager.subscribe({
+          userVisibleOnly: true,
+          applicationServerKey: b64ToU8(cfg.publicKey),
+        });
+        await fetch("/api/push/subscribe", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ subscription: sub }),
+        });
+      } catch {
+        /* the browser will fire this again on the next change */
+      }
+    })()
+  );
+});
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {

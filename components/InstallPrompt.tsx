@@ -97,11 +97,26 @@ export default function InstallPrompt() {
       const permission = await Notification.requestPermission();
       if (permission !== "granted") return;
       const reg = await navigator.serviceWorker.ready;
+      const keyBytes = urlBase64ToUint8Array(cfg.publicKey);
       let sub = await reg.pushManager.getSubscription();
+      // Drop a stale subscription bound to an old VAPID key before re-creating.
+      if (sub) {
+        const cur = sub.options?.applicationServerKey;
+        const a = cur ? new Uint8Array(cur) : null;
+        const matches = a && a.length === keyBytes.length && a.every((b, i) => b === keyBytes[i]);
+        if (!matches) {
+          try {
+            await sub.unsubscribe();
+          } catch {
+            /* ignore */
+          }
+          sub = null;
+        }
+      }
       if (!sub) {
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(cfg.publicKey),
+          applicationServerKey: keyBytes,
         });
       }
       await fetch("/api/push/subscribe", {

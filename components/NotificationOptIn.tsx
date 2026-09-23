@@ -17,6 +17,22 @@ function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
   return out;
 }
 
+/* True only if an existing subscription was created with the same VAPID public
+   key the server now uses. A mismatch means the key changed — the subscription
+   is stale and must be replaced, or it silently stops working. */
+function subMatchesKey(sub: PushSubscription | null, keyBytes: Uint8Array): boolean {
+  try {
+    const cur = sub?.options?.applicationServerKey;
+    if (!cur) return false;
+    const a = new Uint8Array(cur);
+    if (a.length !== keyBytes.length) return false;
+    for (let i = 0; i < a.length; i++) if (a[i] !== keyBytes[i]) return false;
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 type State = "loading" | "unsupported" | "off" | "on" | "denied";
 
 export default function NotificationOptIn({ phone }: { phone?: string }) {
@@ -46,7 +62,12 @@ export default function NotificationOptIn({ phone }: { phone?: string }) {
         const reg = await navigator.serviceWorker.register("/sw.js");
         const existing = await reg.pushManager.getSubscription();
         if (!alive) return;
-        setState(existing && Notification.permission === "granted" ? "on" : "off");
+        // Only "on" if there's a subscription made with the *current* key.
+        const live =
+          !!existing &&
+          Notification.permission === "granted" &&
+          subMatchesKey(existing, urlBase64ToUint8Array(cfg.publicKey));
+        setState(live ? "on" : "off");
       } catch {
         if (alive) setState("unsupported");
       }
@@ -68,11 +89,22 @@ export default function NotificationOptIn({ phone }: { phone?: string }) {
         return;
       }
       const reg = await navigator.serviceWorker.ready;
+      const keyBytes = urlBase64ToUint8Array(publicKey);
       let sub = await reg.pushManager.getSubscription();
+      // A leftover subscription from an old VAPID key must be dropped first —
+      // otherwise the browser keeps a stale one that never receives pushes.
+      if (sub && !subMatchesKey(sub, keyBytes)) {
+        try {
+          await sub.unsubscribe();
+        } catch {
+          /* ignore */
+        }
+        sub = null;
+      }
       if (!sub) {
         sub = await reg.pushManager.subscribe({
           userVisibleOnly: true,
-          applicationServerKey: urlBase64ToUint8Array(publicKey),
+          applicationServerKey: keyBytes,
         });
       }
       const res = await fetch("/api/push/subscribe", {
