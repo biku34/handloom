@@ -225,7 +225,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
               <h2 className="font-display text-lg font-bold text-maroon-900">Details</h2>
               {(() => {
                 const s = product.specs || {};
-                const p = product.production || {};
+                const p: { loomHours?: number; weaverCount?: number } = product.production || {};
                 const fmt = (v: string) => String(v).replace(/_/g, " ").toLowerCase();
                 const zari = s.zariType ? fmt(s.zariType) + (s.zariGrams ? ` · ${s.zariGrams} g` : "") : s.zariGrams ? `${s.zariGrams} g` : null;
                 const rows: [string, string | null][] = [

@@ -11,7 +11,7 @@ import mongoose, { Schema, model, models, Types } from "mongoose";
 const Geo = { type: { type: String, enum: ["Point"], default: "Point" }, coordinates: { type: [Number], default: undefined } };
 
 /* ── organizations ── */
-const OrganizationSchema = new Schema(
+const OrganizationSchema = new Schema<any>(
   {
     orgId: { type: String, unique: true },
     type: { type: String, enum: ["COOPERATIVE", "RETAILER", "VERIFIER_BODY", "MARKETPLACE"], required: true },
@@ -27,7 +27,7 @@ const OrganizationSchema = new Schema(
 );
 
 /* ── users (auth principals) ── */
-const UserSchema = new Schema(
+const UserSchema = new Schema<any>(
   {
     phone: { type: String, required: true, unique: true },
     name: String,
@@ -48,7 +48,7 @@ const UserSchema = new Schema(
 );
 
 /* ── weavers ── */
-const WeaverSchema = new Schema(
+const WeaverSchema = new Schema<any>(
   {
     weaverId: { type: String, unique: true }, // WVR-TN-KAN-000431
     handle: { type: String, unique: true },
@@ -126,7 +126,7 @@ WeaverSchema.index({ orgId: 1, "verification.status": 1 });
 WeaverSchema.index({ "profile.cluster.code": 1 });
 
 /* ── materials (weaver-owned yarn / zari / dye lots) ── */
-const MaterialLotSchema = new Schema(
+const MaterialLotSchema = new Schema<any>(
   {
     lotId: { type: String, unique: true },
     type: { type: String, enum: ["SILK_YARN", "COTTON_YARN", "WOOL_YARN", "ZARI", "DYE"], required: true },
@@ -151,7 +151,7 @@ const MaterialLotSchema = new Schema(
 MaterialLotSchema.index({ weaverId: 1, createdAt: -1 });
 
 /* ── products ── */
-const ProductSchema = new Schema(
+const ProductSchema = new Schema<any>(
   {
     passportId: { type: String, unique: true }, // base58, public, in the QR
     internalSku: String,
@@ -255,7 +255,7 @@ ProductSchema.index({ orgId: 1, status: 1 });
 ProductSchema.index({ "authenticity.flagged": 1, "authenticity.riskScore": -1 });
 
 /* ── tags (physical QR ↔ passport binding) ── */
-const TagSchema = new Schema(
+const TagSchema = new Schema<any>(
   {
     tagCode: { type: String, unique: true }, // == passportId
     productId: { type: Types.ObjectId, ref: "Product", unique: true },
@@ -276,7 +276,7 @@ const TagSchema = new Schema(
 );
 
 /* ── scans (highest-volume) ── */
-const ScanSchema = new Schema(
+const ScanSchema = new Schema<any>(
   {
     passportId: { type: String, index: true },
     productId: { type: Types.ObjectId, ref: "Product" },
@@ -319,7 +319,7 @@ export const PROVENANCE_EVENT_TYPES = [
   "DISPUTED",
 ] as const;
 
-const ProvenanceEventSchema = new Schema(
+const ProvenanceEventSchema = new Schema<any>(
   {
     productId: { type: Types.ObjectId, ref: "Product", required: true },
     passportId: String,
@@ -341,7 +341,7 @@ ProvenanceEventSchema.index({ productId: 1, eventIndex: 1 }, { unique: true });
 ProvenanceEventSchema.index({ passportId: 1, occurredAt: 1 });
 
 /* ── claims ── */
-const ClaimSchema = new Schema(
+const ClaimSchema = new Schema<any>(
   {
     productId: { type: Types.ObjectId, ref: "Product" },
     passportId: String,
@@ -358,7 +358,7 @@ const ClaimSchema = new Schema(
 ClaimSchema.index({ claimantPhone: 1, claimedAt: -1 });
 
 /* ── certificates ── */
-const CertificateSchema = new Schema(
+const CertificateSchema = new Schema<any>(
   {
     productId: { type: Types.ObjectId, ref: "Product" },
     weaverId: { type: Types.ObjectId, ref: "Weaver" },
@@ -376,7 +376,7 @@ const CertificateSchema = new Schema(
 );
 
 /* ── fraudReports ── */
-const FraudReportSchema = new Schema(
+const FraudReportSchema = new Schema<any>(
   {
     passportId: String,
     productId: { type: Types.ObjectId, ref: "Product" },
@@ -405,7 +405,7 @@ const FraudReportSchema = new Schema(
 FraudReportSchema.index({ status: 1, riskScore: -1 });
 
 /* ── mediaAssets (local-disk storage instead of IPFS/R2) ── */
-const MediaAssetSchema = new Schema(
+const MediaAssetSchema = new Schema<any>(
   {
     kind: { type: String, enum: ["IMAGE", "VIDEO", "AUDIO", "DOCUMENT"], required: true },
     purpose: String,
@@ -426,7 +426,7 @@ const MediaAssetSchema = new Schema(
 /* ── ledgerEntries — the append-only, hash-chained integrity log.
       Stand-in for the blockchain: each entry commits to the previous one,
       so any retro-active edit breaks every hash after it. ── */
-const LedgerEntrySchema = new Schema(
+const LedgerEntrySchema = new Schema<any>(
   {
     seq: { type: Number, unique: true },
     type: {
@@ -457,7 +457,7 @@ const LedgerEntrySchema = new Schema(
 LedgerEntrySchema.index({ "chain.status": 1 });
 
 /* ── auditLog (append-only) ── */
-const AuditLogSchema = new Schema(
+const AuditLogSchema = new Schema<any>(
   {
     at: { type: Date, default: Date.now },
     actorUserId: { type: Types.ObjectId, ref: "User" },
@@ -470,8 +470,12 @@ const AuditLogSchema = new Schema(
   { timestamps: true }
 );
 
-function m<T>(name: string, schema: Schema): mongoose.Model<T> {
-  return (models[name] as mongoose.Model<T>) || model<T>(name, schema);
+// Loosely typed on purpose: letting TS infer through mongoose's model()/Schema
+// generics exhausts the type-checker's memory (OOM on `next build`).
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+function m<T>(name: string, schema: any): mongoose.Model<T> {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return (models[name] as mongoose.Model<T>) || (model as any)(name, schema);
 }
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
