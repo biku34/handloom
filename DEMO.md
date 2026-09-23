@@ -12,6 +12,9 @@ OTP login: enter the phone number, the OTP is shown on screen (dev mode).
 | Weaver — Lakshmi Devi | 9222222222 | /w/dashboard |
 | Weaver — Abdul Rahman | 9333333333 | /w/dashboard |
 | Weaver — Selvi A. (PENDING — verify her in /admin/verify) | 9444444444 | /w/dashboard |
+| Customer — Ananya Reddy (no login; use in /purchases) | 9000000005 | /purchases |
+
+Sample customer: open **/purchases**, enter **9000000005**, and you'll see 3 owned pieces plus the "Turn on updates" notification opt-in — the audience for a co-op campaign. Re-create it after any re-seed with `npm run seed:customer`.
 
 ## Passports & scratch-panel secrets
 

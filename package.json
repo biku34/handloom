@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "next start",
     "seed": "tsx scripts/seed.ts",
+    "seed:customer": "tsx scripts/add-sample-customer.ts",
     "wallet:new": "tsx scripts/new-wallet.ts"
   },
   "dependencies": {
