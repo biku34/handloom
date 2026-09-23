@@ -14,7 +14,7 @@ function Section({ title, children }: { title: string; children: React.ReactNode
   return (
     <div className="border-t border-silk-200 pt-4">
       <p className="text-xs font-bold uppercase tracking-[0.15em] text-silk-700">{title}</p>
-      <div className="mt-3 grid sm:grid-cols-2 gap-3">{children}</div>
+      <div className="mt-3 grid grid-cols-2 gap-3">{children}</div>
     </div>
   );
 }
@@ -35,7 +35,7 @@ function Field({
   inputMode?: "numeric" | "text";
 }) {
   return (
-    <div className={wide ? "sm:col-span-2" : ""}>
+    <div className={`min-w-0 ${wide ? "col-span-2" : ""}`}>
       <label className="label">{label}</label>
       <input className="input" value={value} inputMode={inputMode} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
     </div>
@@ -120,25 +120,32 @@ export default function EnrichForm({ productId, product, frozen }: { productId: 
   if (!open) {
     const filled = [s.lengthCm, s.weightGrams, s.weaveTechnique, n.body, pr.loomHours].filter(Boolean).length;
     return (
-      <div className="card p-5">
-        <div className="flex items-center justify-between gap-3">
-          <div>
+      <div className="card p-4 sm:p-5">
+        <div className="sm:flex sm:items-center sm:justify-between sm:gap-3">
+          <div className="min-w-0">
             <h2 className="font-bold text-maroon-900">Product details & story</h2>
             <p className="mt-1 text-sm text-stone-500">
               {filled > 0 ? "Add more detail to make this piece's page richer." : "Add dimensions, weave, price and story — this is what fills out the public page."}
             </p>
+            {/* completeness meter */}
+            <div className="mt-2.5 flex items-center gap-2">
+              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-silk-100 sm:max-w-40">
+                <div className="h-full rounded-full bg-leaf-600" style={{ width: `${(filled / 5) * 100}%` }} />
+              </div>
+              <span className="text-[11px] font-semibold text-stone-500">{filled}/5</span>
+            </div>
           </div>
-          <button onClick={() => setOpen(true)} className="btn-primary shrink-0">{filled > 0 ? "Edit details" : "Add details"}</button>
+          <button onClick={() => setOpen(true)} className="btn-primary mt-3 w-full sm:mt-0 sm:w-auto shrink-0">{filled > 0 ? "Edit details" : "Add details"}</button>
         </div>
       </div>
     );
   }
 
   return (
-    <form onSubmit={submit} className="card p-5 space-y-4">
-      <div className="flex items-center justify-between">
+    <form onSubmit={submit} className="card p-4 sm:p-5 space-y-4">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="font-display text-lg font-bold text-maroon-900">Product details & story</h2>
-        <button type="button" onClick={() => setOpen(false)} className="text-xs text-stone-400 hover:text-maroon-700">Collapse</button>
+        <button type="button" onClick={() => setOpen(false)} className="-mr-2 min-h-10 rounded-lg px-3 text-sm font-semibold text-stone-500 hover:bg-silk-100 hover:text-maroon-700">Close</button>
       </div>
       {error && <div className="rounded-xl bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">{error}</div>}
       {saved && <div className="rounded-xl bg-leaf-600/10 border border-leaf-600/25 text-leaf-700 px-4 py-3 text-sm">Saved — your public page is updated.</div>}
@@ -157,15 +164,15 @@ export default function EnrichForm({ productId, product, frozen }: { productId: 
       <Section title="Craft detail">
         <Field label="Thread count — warp" value={f.warp} onChange={(v) => set("warp", v)} placeholder="e.g. 60" inputMode="numeric" />
         <Field label="Thread count — weft" value={f.weft} onChange={(v) => set("weft", v)} placeholder="e.g. 56" inputMode="numeric" />
-        <div>
+        <div className="min-w-0">
           <label className="label">Zari type</label>
           <select className="input" value={f.zariType} onChange={(e) => set("zariType", e.target.value)}>
             {ZARI_TYPES.map((z) => <option key={z} value={z}>{z ? z.replace(/_/g, " ").toLowerCase() : "—"}</option>)}
           </select>
         </div>
         <Field label="Zari (g)" value={f.zariGrams} onChange={(v) => set("zariGrams", v)} placeholder="e.g. 180" inputMode="numeric" />
-        <Field label="Weave technique" value={f.weaveTechnique} onChange={(v) => set("weaveTechnique", v)} placeholder="e.g. Korvai, Kadhua, Double ikat" />
-        <div>
+        <Field label="Weave technique" value={f.weaveTechnique} onChange={(v) => set("weaveTechnique", v)} placeholder="e.g. Korvai, Kadhua, Double ikat" wide />
+        <div className="min-w-0">
           <label className="label">Dye type</label>
           <select className="input" value={f.dyeType} onChange={(e) => set("dyeType", e.target.value)}>
             {DYE_TYPES.map((d) => <option key={d} value={d}>{d ? d.replace(/_/g, " ").toLowerCase() : "—"}</option>)}
@@ -189,7 +196,7 @@ export default function EnrichForm({ productId, product, frozen }: { productId: 
       </Section>
 
       <Section title="GI protection">
-        <label className="sm:col-span-2 flex items-center gap-2.5 text-sm">
+        <label className="col-span-2 flex items-start gap-3 text-sm">
           <input type="checkbox" checked={f.giRegistered} onChange={(e) => set("giRegistered", e.target.checked)} />
           This craft has a registered Geographical Indication (GI) tag
         </label>
@@ -203,17 +210,20 @@ export default function EnrichForm({ productId, product, frozen }: { productId: 
 
       <Section title="The story">
         <Field label="Title" value={f.title} onChange={(v) => set("title", v)} placeholder="e.g. Four months, two looms, one border" wide />
-        <div className="sm:col-span-2">
+        <div className="col-span-2">
           <label className="label">The story of this piece</label>
           <textarea className="input min-h-24" value={f.body} onChange={(e) => set("body", e.target.value)} placeholder="What makes it special, how long it took, what inspired it…" />
         </div>
-        <div className="sm:col-span-2">
+        <div className="col-span-2">
           <label className="label">Cultural note (optional)</label>
           <textarea className="input min-h-20" value={f.culturalNote} onChange={(e) => set("culturalNote", e.target.value)} placeholder="e.g. The mayil chakram motif is drawn from the Kailasanathar temple…" />
         </div>
       </Section>
 
-      <button className="btn-primary w-full" disabled={busy}>{busy ? "Saving…" : "Save details"}</button>
+      {/* stays reachable while scrolling a long form (sits just above the phone tab bar) */}
+      <div className="sticky bottom-[calc(4.5rem+env(safe-area-inset-bottom))] md:bottom-4 z-10 -mx-1 rounded-2xl bg-white/90 p-1 backdrop-blur">
+        <button className="btn-primary btn-lg w-full" disabled={busy}>{busy ? "Saving…" : "Save details"}</button>
+      </div>
     </form>
   );
 }

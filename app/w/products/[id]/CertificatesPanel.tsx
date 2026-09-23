@@ -45,10 +45,10 @@ export default function CertificatesPanel({ productId, certificates }: { product
   }
 
   return (
-    <div className="card p-5">
-      <div className="flex items-center justify-between">
+    <div className="card p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold text-maroon-900">Certificates</h2>
-        {!open && <button onClick={() => setOpen(true)} className="btn-secondary text-xs px-3 py-1.5">Add certificate</button>}
+        {!open && <button onClick={() => setOpen(true)} className="btn-secondary">+ Add</button>}
       </div>
 
       {certificates.length > 0 ? (
@@ -81,11 +81,11 @@ export default function CertificatesPanel({ productId, certificates }: { product
             <input className="input" value={f.issuedBy} onChange={(e) => set("issuedBy", e.target.value)} placeholder="e.g. Silk Mark Organisation of India" />
           </div>
           <div className="grid grid-cols-2 gap-3">
-            <div>
+            <div className="min-w-0">
               <label className="label">Issued on</label>
               <input type="date" className="input" value={f.issuedAt} onChange={(e) => set("issuedAt", e.target.value)} />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className="label">Valid until</label>
               <input type="date" className="input" value={f.validUntil} onChange={(e) => set("validUntil", e.target.value)} />
             </div>

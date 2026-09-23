@@ -2,6 +2,7 @@ import Link from "next/link";
 import LogoutButton from "./LogoutButton";
 import NavLink from "./NavLink";
 import Logo from "./Logo";
+import PortalTabBar from "./PortalTabBar";
 
 export default function PortalShell({
   title,
@@ -10,7 +11,7 @@ export default function PortalShell({
   children,
 }: {
   title: string;
-  nav: { href: string; label: string; icon?: string }[];
+  nav: { href: string; label: string; short?: string; icon?: string }[];
   userName?: string;
   children: React.ReactNode;
 }) {
@@ -38,13 +39,15 @@ export default function PortalShell({
             <LogoutButton />
           </div>
         </div>
-        <nav className="mx-auto max-w-6xl px-4 pb-3 flex gap-1.5 overflow-x-auto">
+        {/* tablets & desktop: pill nav under the header (phones use the bottom tab bar) */}
+        <nav className="mx-auto max-w-6xl px-4 pb-3 hidden md:flex gap-1.5 overflow-x-auto">
           {nav.map((n) => (
-            <NavLink key={n.href} {...n} />
+            <NavLink key={n.href} href={n.href} label={n.label} icon={n.icon} />
           ))}
         </nav>
       </header>
-      <main className="mx-auto w-full max-w-6xl px-4 py-8 pb-20 flex-1">{children}</main>
+      <main className="mx-auto w-full min-w-0 max-w-6xl px-4 py-5 md:py-8 pb-10 md:pb-20 flex-1">{children}</main>
+      <PortalTabBar nav={nav} />
       <footer className="border-t border-silk-200 py-4 text-center text-[11px] tracking-wide text-stone-400">
         SUTRA · every thread has a story
       </footer>

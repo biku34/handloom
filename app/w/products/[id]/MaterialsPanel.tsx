@@ -41,22 +41,22 @@ export default function MaterialsPanel({ productId, frozen, linked, lots }: { pr
   }
 
   return (
-    <div className="card p-5">
-      <div className="flex items-center justify-between">
+    <div className="card p-4 sm:p-5">
+      <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold text-maroon-900">Materials</h2>
-        <Link href="/w/materials" className="text-xs font-semibold text-maroon-700 hover:underline">Manage lots →</Link>
+        <Link href="/w/materials" className="-mr-2 inline-flex min-h-10 items-center rounded-lg px-2 text-sm font-semibold text-maroon-700 hover:bg-silk-100">Manage lots →</Link>
       </div>
 
       {linked.length > 0 ? (
         <ul className="mt-3 space-y-2">
           {linked.map((m, i) => (
-            <li key={i} className="flex items-center justify-between gap-3 rounded-xl bg-silk-50 border border-silk-200 px-3.5 py-2.5 text-sm">
-              <span className="font-medium text-maroon-900">
+            <li key={i} className="rounded-xl bg-silk-50 border border-silk-200 px-3.5 py-2.5 text-sm sm:flex sm:items-center sm:justify-between sm:gap-3">
+              <span className="block min-w-0 font-medium text-maroon-900">
                 {m.role} · {TYPE_LABEL[m.type || ""] || m.type}
                 {m.supplierName ? <span className="text-stone-500 font-normal"> · {m.supplierName}</span> : null}
                 {m.isHankYarn ? <span className="ml-1.5 rounded-full bg-leaf-600/10 text-leaf-700 border border-leaf-600/25 px-1.5 py-0.5 text-[9px] font-bold align-middle">HANK</span> : null}
               </span>
-              <span className="text-stone-500 whitespace-nowrap">{m.quantityGrams} g · <span className="font-mono text-xs">{m.lotIdLabel}</span></span>
+              <span className="mt-0.5 block text-xs text-stone-500 sm:mt-0 sm:whitespace-nowrap">{m.quantityGrams} g · <span className="font-mono">{m.lotIdLabel}</span></span>
             </li>
           ))}
         </ul>
