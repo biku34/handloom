@@ -18,20 +18,36 @@ const NETWORKS: Record<string, { name: string; chainId: number; explorer: string
   polygon: { name: "Polygon", chainId: 137, explorer: "https://polygonscan.com", alchemyBase: "https://polygon-mainnet.g.alchemy.com/v2/" },
 };
 
+// Env values are trimmed: a stray space after "=" (e.g. `CHAIN_PRIVATE_KEY= 0x…`)
+// previously produced an invalid key and every anchor silently failed.
+const env = (k: string) => (process.env[k] || "").trim();
+
 function cfg() {
-  const network = (process.env.CHAIN_NETWORK || "amoy").toLowerCase();
+  const network = (env("CHAIN_NETWORK") || "amoy").toLowerCase();
   const net = NETWORKS[network] || NETWORKS.amoy;
-  const alchemyKey = process.env.ALCHEMY_API_KEY || "";
+  const alchemyKey = env("ALCHEMY_API_KEY");
   // Alchemy is the primary provider; a raw POLYGON_RPC_URL is an optional fallback.
-  const rpcUrl = alchemyKey ? net.alchemyBase + alchemyKey : process.env.POLYGON_RPC_URL || "";
+  const rpcUrl = alchemyKey ? net.alchemyBase + alchemyKey : env("POLYGON_RPC_URL");
+  const rawKey = env("CHAIN_PRIVATE_KEY");
+  const privateKey = rawKey && !rawKey.startsWith("0x") ? "0x" + rawKey : rawKey;
   return {
-    enabled: process.env.CHAIN_ENABLED === "true" && !!process.env.CHAIN_PRIVATE_KEY && !!rpcUrl,
+    enabled: env("CHAIN_ENABLED") === "true" && !!privateKey && !!rpcUrl,
     usingAlchemy: !!alchemyKey,
     rpcUrl,
-    privateKey: process.env.CHAIN_PRIVATE_KEY || "",
+    privateKey,
     net,
-    confirmations: Number(process.env.CHAIN_CONFIRMATIONS || 1),
+    confirmations: Number(env("CHAIN_CONFIRMATIONS") || 1),
   };
+}
+
+/** Strip anything that could be a secret (keys, RPC URLs with API keys) from an error message before it is stored. */
+function safeError(e: unknown): string {
+  const msg = (e as Error)?.message || "send failed";
+  return msg
+    .replace(/0x\s*[0-9a-fA-F]{64}\b/g, "0x[redacted]") // private keys / 32-byte secrets
+    .replace(/\b[0-9a-fA-F]{64}\b/g, "[redacted]")
+    .replace(/https?:\/\/\S+/g, "[rpc-url]") // Alchemy URLs embed the API key
+    .slice(0, 200);
 }
 
 export function isChainEnabled(): boolean {
@@ -105,7 +121,7 @@ export async function anchorOnChain(hashHex: string): Promise<AnchorResult> {
       if (!receipt || receipt.status !== 1) return { ok: false, error: "tx not confirmed" };
       return { ok: true, txHash: tx.hash, blockNumber: receipt.blockNumber, network: c.net.name };
     } catch (e) {
-      return { ok: false, error: (e as Error).message?.slice(0, 200) || "send failed" };
+      return { ok: false, error: safeError(e) };
     }
   });
   // keep the chain alive regardless of this call's outcome
