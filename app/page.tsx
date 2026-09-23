@@ -5,6 +5,7 @@ import ProductCard from "@/components/ProductCard";
 import Icon from "@/components/Icon";
 import { getHomeData } from "@/lib/catalog";
 import { mediaUrl } from "@/lib/storage";
+import InstallAppButton from "@/components/InstallAppButton";
 
 // Rebuilt at most once a minute (and immediately when a passport is minted)
 // instead of querying MongoDB on every visit.
@@ -87,6 +88,9 @@ export default async function LandingPage() {
             ))}
           </div>
         </section>
+
+        {/* ── Install the app (Android/Chromium only; hidden otherwise) ── */}
+        <InstallAppButton />
 
         {/* ── Shop by craft ── */}
         {crafts.length > 0 && (
