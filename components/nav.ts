@@ -10,6 +10,7 @@ export const COOP_NAV = [
   { href: "/coop/dashboard", label: "Overview", short: "Overview", icon: "grid" },
   { href: "/coop/weavers", label: "Weavers", short: "Weavers", icon: "users" },
   { href: "/coop/products", label: "Products & custody", short: "Products", icon: "box" },
+  { href: "/coop/campaigns", label: "Campaigns", short: "Campaigns", icon: "megaphone" },
 ];
 
 export const ADMIN_NAV = [

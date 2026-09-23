@@ -94,6 +94,13 @@ const PATHS: Record<string, React.ReactNode> = {
     </>
   ),
   chevron: <path d="M9 5l7 7-7 7" />,
+  megaphone: (
+    <>
+      <path d="M4 10v4a1 1 0 0 0 1 1h2l8 4V5L7 9H5a1 1 0 0 0-1 1z" />
+      <path d="M18 9a3.5 3.5 0 0 1 0 6" />
+      <path d="M7 15v3.5a1.5 1.5 0 0 0 3 0V16" />
+    </>
+  ),
   truck: (
     <>
       <path d="M3 6h11v10H3zM14 10h4l3 3v3h-7" />

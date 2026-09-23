@@ -1,7 +1,7 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  serverExternalPackages: ["mongoose"],
+  serverExternalPackages: ["mongoose", "web-push"],
   images: {
     // Product photos are uploaded screenshots/PNGs of several hundred KB;
     // serve resized AVIF/WebP instead and keep the result cached for a month.

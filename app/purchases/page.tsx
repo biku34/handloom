@@ -1,5 +1,6 @@
 import SiteHeader from "@/components/SiteHeader";
 import PurchaseSearch from "./PurchaseSearch";
+import NotificationOptIn from "@/components/NotificationOptIn";
 
 export const metadata = { title: "My purchases" };
 
@@ -15,6 +16,9 @@ export default function PurchasesPage() {
         </p>
         <div className="mt-8">
           <PurchaseSearch />
+        </div>
+        <div className="mt-6">
+          <NotificationOptIn />
         </div>
         <p className="mt-8 text-center text-xs text-stone-400">
           No account needed. Only items claimed with your number are shown.

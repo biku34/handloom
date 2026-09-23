@@ -1,0 +1,49 @@
+/* SUTRA service worker — receives Web Push campaigns and shows them as
+   native OS notifications, even when the app/tab is closed (on supported
+   platforms). Registered by components/NotificationOptIn.tsx. */
+
+// Activate immediately on install/update so new pushes use the latest logic.
+self.addEventListener("install", () => self.skipWaiting());
+self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
+
+self.addEventListener("push", (event) => {
+  let data = {};
+  try {
+    data = event.data ? event.data.json() : {};
+  } catch {
+    data = { title: "SUTRA", body: event.data ? event.data.text() : "" };
+  }
+
+  const title = data.title || "SUTRA";
+  const options = {
+    body: data.body || "",
+    icon: data.icon || "/icon-192.png",
+    badge: "/icon-192.png",
+    // Maroon accent on Android's notification.
+    image: data.image || undefined,
+    tag: data.tag || "sutra-campaign",
+    renotify: true,
+    data: { url: data.url || "/purchases" },
+    vibrate: [80, 40, 80],
+  };
+
+  event.waitUntil(self.registration.showNotification(title, options));
+});
+
+// Tapping the notification focuses an existing tab or opens the deep link.
+self.addEventListener("notificationclick", (event) => {
+  event.notification.close();
+  const target = (event.notification.data && event.notification.data.url) || "/purchases";
+
+  event.waitUntil(
+    self.clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+      for (const client of clientList) {
+        if ("focus" in client) {
+          client.navigate(target).catch(() => {});
+          return client.focus();
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(target);
+    })
+  );
+});

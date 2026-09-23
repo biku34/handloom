@@ -457,6 +457,48 @@ const LedgerEntrySchema = new Schema<any>(
 );
 LedgerEntrySchema.index({ "chain.status": 1 });
 
+/* ── pushSubscriptions — a customer's browser/PWA push endpoint (Web Push).
+      One row per device that opted in to notifications. Keyed by the unique
+      push `endpoint`; `keys` hold the ECDH/auth secrets the browser hands us. ── */
+const PushSubscriptionSchema = new Schema<any>(
+  {
+    endpoint: { type: String, required: true, unique: true },
+    keys: { p256dh: String, auth: String },
+    // Best-effort audience targeting; a public opt-in may leave these blank.
+    phone: String, // normalised 10-digit, if the customer was signed in / matched
+    userId: { type: Types.ObjectId, ref: "User" },
+    orgId: { type: Types.ObjectId, ref: "Organization" }, // coop whose customer this is
+    ua: String, // user-agent, for debugging which device
+    lastSeenAt: { type: Date, default: Date.now },
+    failCount: { type: Number, default: 0 }, // consecutive send failures; prune when high
+    status: { type: String, enum: ["ACTIVE", "EXPIRED"], default: "ACTIVE" },
+  },
+  { timestamps: true }
+);
+PushSubscriptionSchema.index({ orgId: 1, status: 1 });
+
+/* ── campaigns — a marketing push a cooperative sent to its customers ── */
+const CampaignSchema = new Schema<any>(
+  {
+    orgId: { type: Types.ObjectId, ref: "Organization" },
+    title: { type: String, required: true },
+    body: { type: String, required: true },
+    url: { type: String, default: "/purchases" }, // where the notification deep-links
+    templateId: String, // which preset was used, or "custom"
+    audience: { type: String, enum: ["ALL", "ORG"], default: "ALL" },
+    sentBy: { type: Types.ObjectId, ref: "User" },
+    sentByName: String,
+    stats: {
+      targeted: { type: Number, default: 0 },
+      delivered: { type: Number, default: 0 },
+      failed: { type: Number, default: 0 },
+    },
+    status: { type: String, enum: ["SENT", "PARTIAL", "FAILED"], default: "SENT" },
+  },
+  { timestamps: true }
+);
+CampaignSchema.index({ orgId: 1, createdAt: -1 });
+
 /* ── auditLog (append-only) ── */
 const AuditLogSchema = new Schema<any>(
   {
@@ -493,6 +535,8 @@ export const Certificate = m<any>("Certificate", CertificateSchema);
 export const FraudReport = m<any>("FraudReport", FraudReportSchema);
 export const MediaAsset = m<any>("MediaAsset", MediaAssetSchema);
 export const LedgerEntry = m<any>("LedgerEntry", LedgerEntrySchema);
+export const PushSubscription = m<any>("PushSubscription", PushSubscriptionSchema);
+export const Campaign = m<any>("Campaign", CampaignSchema);
 export const AuditLog = m<any>("AuditLog", AuditLogSchema);
 
 export const CRAFTS = [
