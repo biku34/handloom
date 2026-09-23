@@ -53,34 +53,46 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
   const MAT_TYPE: Record<string, string> = { SILK_YARN: "Silk yarn", COTTON_YARN: "Cotton yarn", WOOL_YARN: "Wool yarn", ZARI: "Zari", DYE: "Dye" };
   const mainImage = product.images.primary || product.images.onLoom;
   const secondImage = product.images.onLoom && product.images.onLoom !== product.images.primary ? product.images.onLoom : null;
-  const verdictPill: Record<string, { cls: string; label: string }> = {
-    GENUINE: { cls: "bg-leaf-600 text-white", label: "✓ Verified genuine handloom" },
-    PENDING: { cls: "bg-amber-500 text-white", label: "Confirmation pending" },
-    FLAGGED: { cls: "bg-orange-600 text-white", label: "Under review" },
-    VOIDED: { cls: "bg-red-700 text-white", label: "Passport voided" },
-  };
-  const pill = verdictPill[verdict.status] ?? verdictPill.PENDING;
+  const titleCase = (v: string) => v.charAt(0).toUpperCase() + v.slice(1).toLowerCase();
+  const verifiedDate = verdict.verifiedAt ? new Date(verdict.verifiedAt).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : null;
+
+  const vb =
+    ({
+      GENUINE: { icon: "✓", ring: "bg-leaf-600", card: "bg-white border-leaf-600/40", title: "Genuine handloom", sub: `Verified & recorded on a tamper-evident ledger${verifiedDate ? ` · ${verifiedDate}` : ""}` },
+      PENDING: { icon: "⏳", ring: "bg-amber-500", card: "bg-amber-50 border-amber-200", title: "Confirmation pending", sub: verdict.message },
+      FLAGGED: { icon: "!", ring: "bg-orange-600", card: "bg-orange-50 border-orange-300", title: "Caution — under review", sub: verdict.warnings[0] || verdict.message },
+      VOIDED: { icon: "✕", ring: "bg-red-700", card: "bg-red-50 border-red-300", title: "Passport voided", sub: verdict.warnings[0] || verdict.message },
+    } as Record<string, { icon: string; ring: string; card: string; title: string; sub: string }>)[verdict.status] ?? { icon: "⏳", ring: "bg-amber-500", card: "bg-amber-50 border-amber-200", title: "Pending", sub: verdict.message };
+
+  // the few most impressive facts, as chips
+  const keyFacts = [
+    product.production?.loomHours ? `${product.production.loomHours} hrs at the loom` : null,
+    product.specs?.weaveTechnique ? `${titleCase(product.specs.weaveTechnique)} weave` : null,
+    product.specs?.lengthCm ? `${(product.specs.lengthCm / 100).toFixed(1)} m long` : null,
+    product.giTag?.registered ? "GI protected" : null,
+    product.specs?.zariType ? "Pure zari" : null,
+  ].filter(Boolean).slice(0, 4) as string[];
 
   return (
     <div>
       <SiteHeader />
-      <main className="mx-auto max-w-5xl px-4 py-6 pb-16">
+      <main className="mx-auto max-w-5xl px-4 py-6 pb-28 lg:pb-16">
         <ScanBeacon passportId={passportId} />
 
-        {/* safety warning stays for flagged / voided items */}
-        {verdict.warnings.length > 0 && (
-          <div className="mb-4 rounded-xl border border-orange-300 bg-orange-50 px-4 py-3 text-sm text-orange-900 space-y-1">
-            {verdict.warnings.map((w: string, i: number) => (
-              <p key={i}>{w}</p>
-            ))}
+        {/* ── verdict trust bar — the instant answer, above everything ── */}
+        <div className={`rounded-2xl border p-4 sm:p-5 flex items-center gap-4 ${vb.card}`}>
+          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl font-bold text-white ${vb.ring}`}>{vb.icon}</div>
+          <div className="min-w-0">
+            <p className="font-display text-lg sm:text-xl font-bold text-maroon-900">{vb.title}</p>
+            <p className="text-sm text-stone-600">{vb.sub}</p>
           </div>
-        )}
+        </div>
 
-        {/* ── weaver sidebar (left) + product main (right) ── */}
-        <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
-          {/* ── LEFT SIDEBAR: the weaver ── */}
+        {/* ── weaver sidebar (desktop-left) + product main; product shows first on mobile ── */}
+        <div className="mt-5 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
+          {/* ── THE MAKER ── */}
           {weaver && (
-            <aside className="lg:sticky lg:top-6">
+            <aside className="order-2 lg:order-1 lg:sticky lg:top-6">
               <section className="card overflow-hidden">
                 {weaver.photoUrl ? (
                   // eslint-disable-next-line @next/next/no-img-element
@@ -90,9 +102,8 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
                 )}
                 <div className="p-5">
                   <p className="text-xs font-semibold uppercase tracking-[0.2em] text-silk-700">Woven by</p>
-                  <h1 className="font-display text-2xl font-bold text-maroon-900">{weaver.displayName}</h1>
-                  <span className={`mt-2 inline-block rounded-full px-2.5 py-0.5 text-[11px] font-bold ${pill.cls}`}>{pill.label}</span>
-                  <p className="mt-2 text-sm text-stone-600">
+                  <p className="font-display text-2xl font-bold text-maroon-900">{weaver.displayName}</p>
+                  <p className="mt-1.5 text-sm text-stone-600">
                     {[weaver.generation ? `${weaver.generation}th generation` : null, weaver.cluster, weaver.yearsWeaving ? `${weaver.yearsWeaving} years at the loom` : null]
                       .filter(Boolean)
                       .join(" · ")}
@@ -126,27 +137,42 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
             </aside>
           )}
 
-          {/* ── MAIN: the product ── */}
-          <div className="space-y-6">
-            {/* full-size photo */}
+          {/* ── THE PRODUCT ── */}
+          <div className="order-1 lg:order-2 space-y-5">
+            {/* photo */}
             <section className="card overflow-hidden">
               {mainImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
-                <img src={mainImage} alt={product.name || "The piece"} className="w-full max-h-[560px] object-cover" />
+                <img src={mainImage} alt={product.name || "The piece"} className="w-full max-h-[520px] object-cover" />
               ) : (
                 <div className="w-full h-64 bg-silk-100 flex items-center justify-center text-6xl">🧵</div>
               )}
-              <div className="px-5 py-4">
-                <p className="text-sm font-semibold text-maroon-800">
-                  {[
-                    product.production?.loomHours ? `${product.production.loomHours} hours at the loom` : null,
-                    product.specs?.weaveTechnique ? `${product.specs.weaveTechnique.charAt(0) + product.specs.weaveTechnique.slice(1).toLowerCase()} weave` : null,
-                    product.specs?.zariType ? "Pure zari" : null,
-                  ]
-                    .filter(Boolean)
-                    .join(" · ") || "Photographed where it was woven"}
-                </p>
-              </div>
+            </section>
+
+            {/* name + key facts + credentials — the "what is it" at a glance */}
+            <section className="card p-5 sm:p-6">
+              <span className="text-xs font-semibold uppercase tracking-wide text-silk-700">{product.craft}</span>
+              <h1 className="font-display mt-0.5 text-2xl sm:text-3xl font-bold text-maroon-900">{product.name}</h1>
+              {keyFacts.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {keyFacts.map((f) => (
+                    <span key={f} className="rounded-full bg-silk-100 border border-silk-300 px-3 py-1 text-xs font-semibold text-maroon-800">{f}</span>
+                  ))}
+                </div>
+              )}
+              {(product.giTag?.registered || certificates.length > 0) && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {product.giTag?.registered && (
+                    <span className="rounded-full bg-leaf-600/10 text-leaf-700 border border-leaf-600/30 px-3 py-1 text-xs font-bold">GI Protected · {product.giTag.name}</span>
+                  )}
+                  {certificates.map((c: { type: string; number?: string }) => (
+                    <span key={c.type + c.number} className="rounded-full bg-silk-100 border border-silk-300 text-maroon-800 px-3 py-1 text-xs font-bold">
+                      {c.type.replace(/_/g, " ")}
+                      {c.number ? ` #${c.number}` : ""}
+                    </span>
+                  ))}
+                </div>
+              )}
             </section>
 
             {/* primary actions — 3 compact columns */}
@@ -196,18 +222,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
             )}
 
             <section className="card p-5 sm:p-6">
-              <h2 className="font-display text-xl sm:text-2xl font-bold text-maroon-900">{product.name}</h2>
-              <div className="mt-3 flex flex-wrap gap-2">
-                {product.giTag?.registered && (
-                  <span className="rounded-full bg-leaf-600/10 text-leaf-700 border border-leaf-600/30 px-3 py-1 text-xs font-bold">GI Protected · {product.giTag.name}</span>
-                )}
-                {certificates.map((c: { type: string; number?: string }) => (
-                  <span key={c.type + c.number} className="rounded-full bg-silk-100 border border-silk-300 text-maroon-800 px-3 py-1 text-xs font-bold">
-                    {c.type.replace(/_/g, " ")}
-                    {c.number ? ` #${c.number}` : ""}
-                  </span>
-                ))}
-              </div>
+              <h2 className="font-display text-lg font-bold text-maroon-900">Details</h2>
               {(() => {
                 const s = product.specs || {};
                 const p = product.production || {};
@@ -350,6 +365,14 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
           {view.proof.sealed && view.proof.sealedAt ? ` · record sealed on ${new Date(view.proof.sealedAt).toLocaleDateString("en-IN")}` : ""}
         </p>
       </main>
+
+      {/* sticky action bar — always within reach on mobile */}
+      <div className="fixed inset-x-0 bottom-0 z-40 lg:hidden border-t border-silk-200 bg-white/95 backdrop-blur px-4 py-2.5 flex items-center gap-3">
+        <Link href={`/p/${passportId}/journey`} className="btn-secondary flex-1 py-2.5">Journey</Link>
+        <Link href={`/p/${passportId}/claim`} className={`flex-1 py-2.5 ${ownership.claimed ? "btn-secondary" : "btn-primary"}`}>
+          {ownership.claimed ? "Owned ✓" : "Claim this piece"}
+        </Link>
+      </div>
     </div>
   );
 }

@@ -17,11 +17,11 @@ OTP login: enter the phone number, the OTP is shown on screen (dev mode).
 
 | Product | Passport (URL: /p/{id}) | Secret | Note |
 |---|---|---|---|
-| Kanjivaram Silk Saree — Peacock Blue with Temple Border | 3mnL9EfhvpnaZKhL | DFJ5BZ2E | ALREADY CLAIMED — claiming again triggers the clone alarm (409) |
-| Kanjivaram Silk Saree — Maroon with Gold Checks | 4C2HMc1ZMP5SHvYp | UY395Z6P | at retailer, unclaimed — try the claim flow |
-| Pochampally Ikat Silk Saree — Indigo Diamond Grid | 5CDonqATme9EyGMz | JURUVU4X | at retailer, unclaimed — try the claim flow |
-| Ikat Cotton Dupatta — Rust Chevron | 4Rpz5NWDFWFa8AK2 | J67AWYXY | with weaver |
-| Banarasi Katan Silk Saree — Ivory Kadhua Butis | 3mVYYADw33XZTwsb | R32XKUBS | at retailer, unclaimed — try the claim flow |
-| Banarasi Silk Stole — Midnight Konia | 4AS8Dag5EXWspQUG | 6WT7MSAK | with weaver |
+| Kanjivaram Silk Saree — Peacock Blue with Temple Border | y4jHWgKVZBqqhNvF | 6FRZYZBD | ALREADY CLAIMED — claiming again triggers the clone alarm (409) |
+| Kanjivaram Silk Saree — Maroon with Gold Checks | 3SaaX9FTCrBaPVzo | WVYFX7XA | at retailer, unclaimed — try the claim flow |
+| Pochampally Ikat Silk Saree — Indigo Diamond Grid | 2iJ7FePQR8cnn9Xr | VY2H5SUV | at retailer, unclaimed — try the claim flow |
+| Ikat Cotton Dupatta — Rust Chevron | 2v1Cn3tizLvd3zXV | 29RKD4TN | with weaver |
+| Banarasi Katan Silk Saree — Ivory Kadhua Butis | W4BEA7Mmd4tP7f37 | WE8WMGB7 | at retailer, unclaimed — try the claim flow |
+| Banarasi Silk Stole — Midnight Konia | 8gXDTkGzRxNN9ByR | ZNKMCT79 | with weaver |
 
-Clone-alarm demo: open /p/3mnL9EfhvpnaZKhL/claim and enter secret DFJ5BZ2E — it is already claimed, so you get the 409 counterfeit alert and a fraud report appears in /admin/fraud.
+Clone-alarm demo: open /p/y4jHWgKVZBqqhNvF/claim and enter secret 6FRZYZBD — it is already claimed, so you get the 409 counterfeit alert and a fraud report appears in /admin/fraud.
