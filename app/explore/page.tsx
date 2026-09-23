@@ -56,7 +56,26 @@ function SideLink({ label, href, on }: { label: string; href: string; on: boolea
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<Params> }) {
   const { craft, category, q: rawQ } = await searchParams;
   const q = rawQ?.trim() || undefined;
-  const { products, crafts, categories, total, makers } = await getCatalog(craft, category, q);
+  let catalog: Awaited<ReturnType<typeof getCatalog>> | null = null;
+  try {
+    catalog = await getCatalog(craft, category, q);
+  } catch (e) {
+    // DB unreachable — show a friendly notice instead of crashing (P6).
+    console.error("[explore] catalog query failed:", e);
+  }
+  if (!catalog) {
+    return (
+      <div>
+        <SiteHeader />
+        <main className="mx-auto max-w-md px-4 py-16 text-center">
+          <h1 className="font-display text-2xl font-bold text-maroon-900">The collection is taking a breather</h1>
+          <p className="mt-2 text-sm text-stone-600">We couldn&apos;t load the pieces right now. Please try again in a moment.</p>
+          <Link href="/explore" className="btn-primary btn-lg mt-6 w-full">Try again</Link>
+        </main>
+      </div>
+    );
+  }
+  const { products, crafts, categories, total, makers } = catalog;
   const active: Params = { craft, category, q };
   const filtered = Boolean(craft || category || q);
 
