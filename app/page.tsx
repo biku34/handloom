@@ -37,11 +37,7 @@ export default async function LandingPage() {
         <section className="bg-maroon-900 text-silk-100 overflow-hidden">
           <div className="mx-auto max-w-6xl px-4 py-7 md:py-16 grid md:grid-cols-2 gap-10 items-center">
             <div className="text-center md:text-left">
-              <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-semibold text-silk-200">
-                <span className="h-1.5 w-1.5 rounded-full bg-leaf-600 ring-2 ring-leaf-600/30" />
-                {stats.passports > 0 ? `${stats.passports.toLocaleString()} verified pieces` : "Genuine Indian handloom"}
-              </span>
-              <h1 className="font-display mt-4 text-[28px] leading-[1.15] sm:text-5xl font-bold">
+              <h1 className="font-display text-[28px] leading-[1.15] sm:text-5xl font-bold">
                 Handloom you can <span className="text-silk-300">trust</span>, woven by people you can meet.
               </h1>
               <p className="mx-auto md:mx-0 mt-3 max-w-lg text-[15px] sm:text-lg text-silk-100/80">
