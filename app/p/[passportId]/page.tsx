@@ -138,9 +138,12 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
           )}
 
           {/* ── THE PRODUCT ── */}
-          <div className="order-1 lg:order-2 space-y-5">
+          {/* flex + `order` so the story can sit high on phones (where the 3-card
+              action grid is hidden in favour of the sticky bottom bar) while the
+              desktop layout keeps the actions up top and the story lower down. */}
+          <div className="order-1 lg:order-2 flex flex-col gap-5">
             {/* photo */}
-            <section className="card overflow-hidden">
+            <section className="order-1 card overflow-hidden">
               {mainImage ? (
                 // eslint-disable-next-line @next/next/no-img-element
                 <img src={mainImage} alt={product.name || "The piece"} className="w-full max-h-[520px] object-cover" />
@@ -150,7 +153,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
             </section>
 
             {/* name + key facts + credentials — the "what is it" at a glance */}
-            <section className="card p-5 sm:p-6">
+            <section className="order-2 card p-5 sm:p-6">
               <span className="text-xs font-semibold uppercase tracking-wide text-silk-700">{product.craft}</span>
               <h1 className="font-display mt-0.5 text-2xl sm:text-3xl font-bold text-maroon-900">{product.name}</h1>
               {keyFacts.length > 0 && (
@@ -175,8 +178,11 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
               )}
             </section>
 
-            {/* primary actions — 3 compact columns */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            {/* primary actions — 3 compact columns.
+                Hidden on phones (below lg): the sticky bottom bar already offers
+                Journey + Claim, so these would be redundant. Shown on desktop,
+                which has no sticky bar. */}
+            <div className="hidden lg:grid lg:grid-cols-3 gap-3 lg:order-3">
               <Link
                 href={`/p/${passportId}/journey`}
                 className="card group px-4 py-3.5 transition-all hover:-translate-y-0.5 hover:border-maroon-600"
@@ -218,10 +224,12 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
             </div>
 
             {product.voiceNoteUrl && (
-              <AudioPlayer src={product.voiceNoteUrl} label="The weaver, about this piece" />
+              <div className="order-4">
+                <AudioPlayer src={product.voiceNoteUrl} label="The weaver, about this piece" />
+              </div>
             )}
 
-            <section className="card p-5 sm:p-6">
+            <section className="order-5 card p-5 sm:p-6">
               <h2 className="font-display text-lg font-bold text-maroon-900">Details</h2>
               {(() => {
                 const s = product.specs || {};
@@ -285,7 +293,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
             </section>
 
             {materials.length > 0 && (
-              <section className="card p-5 sm:p-6">
+              <section className="order-6 card p-5 sm:p-6">
                 <h2 className="font-display text-lg font-bold text-maroon-900">Traceable materials</h2>
                 <p className="mt-1 text-xs text-stone-500">The very threads this piece was woven from — sourced and recorded by the weaver.</p>
                 <ul className="mt-4 space-y-2.5">
@@ -314,9 +322,11 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
               </section>
             )}
 
-            {/* The story, inline */}
+            {/* The story, inline. On phones it rises to sit right under the name
+                (order-3) in place of the hidden action grid; on desktop it keeps
+                its lower position (lg:order-7). */}
             {(product.narrative?.title || product.narrative?.body || product.narrative?.inspiration || product.narrative?.culturalNote) && (
-              <section className="card p-5 sm:p-6">
+              <section className="order-3 lg:order-7 card p-5 sm:p-6">
                 <p className="text-xs font-semibold uppercase tracking-[0.2em] text-silk-700">The story</p>
                 {product.narrative.title && (
                   <h2 className="font-display mt-1 text-xl sm:text-2xl font-bold text-maroon-900">{product.narrative.title}</h2>
@@ -341,7 +351,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
 
             {/* secondary imagery */}
             {secondImage && (
-              <section className="card overflow-hidden">
+              <section className="order-7 lg:order-8 card overflow-hidden">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img src={secondImage} alt="On the loom" className="w-full max-h-[480px] object-cover" />
                 <div className="px-5 py-3">
@@ -350,7 +360,7 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
               </section>
             )}
             {product.images.gallery?.filter(Boolean).length > 0 && (
-              <div className="grid grid-cols-3 gap-3">
+              <div className="order-8 lg:order-9 grid grid-cols-3 gap-3">
                 {product.images.gallery.filter(Boolean).slice(0, 6).map((g: string, i: number) => (
                   // eslint-disable-next-line @next/next/no-img-element
                   <img key={i} src={g} alt="" className="card aspect-square object-cover" />
