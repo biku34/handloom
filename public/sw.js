@@ -6,6 +6,11 @@
 self.addEventListener("install", () => self.skipWaiting());
 self.addEventListener("activate", (event) => event.waitUntil(self.clients.claim()));
 
+// A (pass-through) fetch handler is required for Chrome to treat the site as
+// installable and fire `beforeinstallprompt`. We don't intercept anything —
+// requests go to the network as normal.
+self.addEventListener("fetch", () => {});
+
 self.addEventListener("push", (event) => {
   let data = {};
   try {
