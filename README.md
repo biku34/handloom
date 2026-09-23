@@ -1,62 +1,161 @@
-# SUTRA — Handloom Provenance, Authenticity & Weaver Story Platform
+# SUTRA — Every thread has a story
 
-Local build of the SUTRA SRS (v1.0): a Next.js website on a local MongoDB, with
-**optional** on-chain anchoring to Polygon via Alchemy (off by default).
+**Digital Product Passports for genuine Indian handloom.**
+Scan the tag, meet the weaver, verify the craft — backed by in-person verification and a
+tamper-evident record anchored on a public blockchain.
 
-## SRS
+🔗 **Live pilot:** [handloom-gray.vercel.app](https://handloom-gray.vercel.app)
 
-| SRS component | This build |
+---
+
+## The problem
+
+A Kanjivaram saree can take 120 hours on a handloom. A power-loom imitation takes 40 minutes —
+and to most buyers, the two look the same on a shelf or a product page.
+
+- **Buyers can't tell genuine from fake**, so they either overpay for imitations or stop paying
+  a premium altogether.
+- **Weavers are invisible.** The person who made the piece has no name, no face and no share of
+  the story that sells it.
+- **Existing marks are easy to copy.** A printed label or certificate is just paper; it proves
+  nothing once it is photocopied or moved to another product.
+- **Cooperatives and retailers lack proof** they can hand to a customer, a marketplace or an
+  export buyer.
+
+## What SUTRA does
+
+Every genuine piece gets a **Digital Product Passport**: a QR tag linked to a public page that
+shows who wove it, where, how, with what materials, and every step it took from yarn to shelf.
+
+| | |
 |---|---|
-| Polygon + Alchemy (on-chain anchors) | A hash-chained, append-only `ledgerEntries` collection, verified live on the proof page. When enabled, every entry is **also** anchored on Polygon via Alchemy (see `BLOCKCHAIN.md`). Off by default. |
-| ERC-4337 smart accounts + Gas Manager | One custodial backend wallet signs and pays for every anchor — no user ever touches a wallet, key, or gas |
-| IPFS (Pinata) + Cloudflare R2 | Local `uploads/` directory served via `/api/media/[id]` |
-| SMS OTP (MSG91/Twilio) | Dev-mode OTP shown on the login screen |
-| Vercel Cron workers | Risk scoring runs inline on the events that matter (claims, reports); on-chain retries via `/api/cron/anchor` |
+| **Proves origin** | The weaver's identity and loom are verified in person by a cooperative officer or Weavers' Service Centre official. |
+| **Tells the story** | The weaver's face, voice note, village and craft travel with the piece — the story that justifies the price. |
+| **Stops tampering** | Every event is written to an append-only, hash-chained ledger and anchored on the Polygon blockchain, so no record can be quietly edited later. |
+| **Catches clones** | A scratch-panel secret on each tag lets a buyer claim ownership; a second claim on the same tag raises a counterfeit alarm. |
 
-## What's built
+## How it works
 
-- **Weaver identity** — assisted registration by a co-op, physical verification (verifier attest), credential revocation, public weaver profile.
-- **Product registration** — 4-tap flow (photo + craft + category + voice note), a full enrichment form (dimensions, weave, thread count, colours, motifs, production hours, GI tag, story), certificate attachment (Silk Mark / Handloom Mark / GI / …), passport issue, and freeze-on-dispatch.
-- **Materials traceability** — the weaver registers their own yarn / zari / dye lots; links them to a piece by role and grams; over-consumption is rejected; shown as "Traceable materials" on the public page.
-- **Tagging** — QR + an 8-character scratch secret (only its hash is stored).
-- **Provenance & custody** — append-only journey events; custody transfer to a retailer (dispatch seals the record; an item dispatches once).
-- **Public verification** (`/p/{id}`) — weaver sidebar + product photo, specs, traceable materials and the story inline; journey timeline; proof page (live hash-chain check + on-chain links); ownership claim (name + phone required) with a duplicate-claim clone alarm.
-- **My purchases** (`/purchases`) — a buyer looks up everything they've claimed by phone number.
-- **Fraud & admin** — consumer fraud report, risk scoring, admin fraud console, verification queue, and an ops overview.
-- **Integrity ledger** — hash-chained locally; optionally anchored to Polygon (Alchemy) with block/tx links rendered on the journey and proof pages.
+1. **The weaver registers the piece** — one photo on the loom, the craft, the type and an
+   optional voice note. Four taps on a phone.
+2. **A verifier vouches for the weaver** — a human attestation, made at the loom, recorded
+   permanently.
+3. **A passport is issued** — the piece receives a QR tag and a hidden scratch secret. Journey
+   steps (weaving, finishing, quality check, dispatch) are added as they happen. **Dispatch seals
+   the record** — exactly when the incentive to falsify appears, the record becomes read-only.
+4. **The buyer scans** — no app, no login. In seconds they see a clear verdict, the weaver, the
+   materials and the full journey, and can claim the piece as theirs.
 
-Portals: `/w` (weaver), `/coop` (co-op / retailer), `/admin` (admin / verifier); roles enforced by `middleware.ts`.
+## Who it's for
 
-## Run it
+| Stakeholder | Their problem | What SUTRA gives them |
+|---|---|---|
+| **Buyers** | "Is this really handloom? Who made it?" | A two-second answer on their phone, the maker's story, and proof of ownership they can revisit any time. |
+| **Weavers** | Invisible, under-credited, underpaid | A public profile, credit on every piece, and insight into who viewed and scanned their work. |
+| **Cooperatives** | No scalable way to prove authenticity | Assisted weaver registration, a verification workflow, custody tracking and customer campaigns. |
+| **Retailers & marketplaces** | Counterfeit risk and returns | Sealed custody records, an embeddable "Verified by SUTRA" badge and a public API to show proof on product pages. |
+| **Government & GI bodies** | Enforcing Handloom Mark, Silk Mark and GI claims | Certificates attached to each passport, and fraud reports with risk scores in one console. |
 
-```bash
-# MongoDB must be running on localhost:27017
-npm install
-npm run seed     # wipes & seeds the `sutra` db; writes DEMO.md with logins + tag secrets
-npm run dev      # http://localhost:3000
-```
+## Why buyers can trust it
 
-Login = phone number → OTP shown on screen (dev mode). All demo logins and tag secrets are in `DEMO.md`.
+SUTRA is honest about what technology can and cannot prove. **Technology proves a claim was made
+and never altered afterwards; a person proves the claim was true.** SUTRA combines both.
 
-## Optional: on-chain anchoring via Alchemy
+**1. Human verification at the source.**
+A verifier physically confirms the weaver's identity and loom. That attestation is the root of
+trust. It can expire or be revoked, and a revocation is visible on every passport.
 
-Off by default. To publish every action to Polygon automatically (no user touches the chain),
-follow `BLOCKCHAIN.md` — free on the Amoy testnet: `npm run wallet:new` → fund from the faucet →
-set `ALCHEMY_API_KEY` + `CHAIN_ENABLED=true` → restart. Journey and proof pages then show
-"On Polygon Amoy · block N" links, and the admin overview shows the wallet balance and anchor status.
+**2. A passport that can't be copied.**
+Each QR tag carries a public passport ID plus an 8-character scratch secret. Only a hash of the
+secret is stored, so even the database can't reveal it. Claiming ownership needs the physical
+tag in hand.
 
-## Demo walkthrough
+**3. A tamper-evident record.**
+Every action (passport issue, journey step, certificate, claim, seal) becomes a ledger entry
+whose SHA-256 hash includes the previous entry's hash. Changing any past record breaks the
+chain, and the public **proof page** re-checks the whole chain live, in front of the buyer.
 
-1. **Consumer**: open a passport URL from `DEMO.md` (`/p/{id}`) — verdict, weaver story, materials, journey, proof.
-2. **Claim + clone alarm**: claim an unclaimed piece with its secret (name + phone required); then claim the already-claimed one → 409 counterfeit alert → check `/admin/fraud`.
-3. **My purchases**: search the phone number you claimed with at `/purchases`.
-4. **Weaver** (`9111111111`): dashboard, 4-tap registration, product details & certificates, material lots, insights.
-5. **Co-op** (`9000000002`): roster, assisted registration, dispatch custody (seals records).
-6. **Verifier** (`9000000003`): attest the pending weaver in `/admin/verify`.
-7. **Admin** (`9000000001`): overview with live ledger-chain verification, on-chain status, fraud queue.
+**4. Anchored on a public blockchain.**
+Each ledger entry's hash is also written to **Polygon** through **Alchemy**. Anyone can click
+through from a product's journey to the real transaction on Polygonscan and confirm the hash
+matches. No weaver, cooperative or buyer ever handles a wallet, key or gas fee; one platform
+account signs and pays for every anchor in the background. Each anchor costs a fraction of a cent.
 
-## Scripts
+**5. Active fraud detection.**
+A duplicate ownership claim, bursts of scans, the same tag scanned in several cities within a
+day, repeated failed claims and consumer reports all feed a 0–100 **risk score** per product. Flagged pieces show a clear caution on their public page and land in an
+admin fraud queue for investigation.
 
-- `npm run dev` / `npm run build` / `npm run start`
-- `npm run seed` — reset and seed the database (writes `DEMO.md`)
-- `npm run wallet:new` — generate a backend anchoring wallet (for on-chain anchoring)
+## Built for the realities of the field
+
+- **Phone-first.** It installs to the home screen like an app, with a shop-style layout and a
+  bottom tab bar. It works on low-end Android phones and iPhones alike.
+- **No app or account for buyers.** Scan, browse, verify and look up purchases by phone number.
+- **Low-literacy friendly.** Photo-and-tap registration, voice notes instead of typing, and
+  big buttons.
+- **Light on data.** Photos are compressed on the phone before upload, images are resized per
+  device, and pages are cached at the edge.
+- **Degrades gracefully.** If the blockchain is slow, the local ledger keeps working and records
+  show as "pending" until they're anchored. Buyers are never shown an error in place of a verdict.
+- **Privacy by design.** Government ID numbers are never stored (only a hash). Photo metadata,
+  including GPS location, is stripped before upload. A weaver's record can be crypto-shredded on
+  request.
+
+## Tools for growth
+
+- **Storefront & discovery.** A browsable collection with search, craft and type filters, and
+  maker profiles, so authenticity becomes a reason to buy.
+- **Weaver insights.** "Who saw my work": scans, reach and pieces that found a home.
+- **Cooperative campaigns.** Push-notification campaigns to opted-in customers, such as new
+  arrivals, festive collections and restocks, sent straight from the cooperative portal.
+- **Embeddable proof.** A live "Verified by SUTRA" SVG badge and a public passport API
+  (`/api/v1/passports/{id}`) for marketplaces, brand sites and export buyers.
+
+## Business model *(proposed)*
+
+| Revenue line | Who pays | For what |
+|---|---|---|
+| **Per-passport fee** | Cooperatives, brands | Issuing a tag and passport for each certified piece |
+| **Verification as a service** | Cooperatives, GI & mark bodies | Running and recording in-person weaver verification |
+| **Marketplace / API plan** | Retailers, e-commerce platforms | Badge embeds, API access and bulk authenticity checks |
+| **Growth tools** | Cooperatives, retailers | Customer campaigns and audience insights |
+
+Buyers never pay to verify. Free, instant verification is what makes the passport valuable to
+everyone else.
+
+## What we measure
+
+The platform tracks the numbers that show both trust and impact, and they are visible live on
+the home page and admin overview:
+
+- **Verified weavers** and **passports issued**, the supply of provably genuine handloom
+- **Consumer scans** and **ownership claims**, i.e. buyer engagement and conversion
+- **Fraud reports and clone alarms**, the counterfeit pressure caught
+- **Ledger records and on-chain anchors**, the integrity coverage
+
+## Status & roadmap
+
+**Today (pilot):** end-to-end flows for weavers, cooperatives, verifiers, admins and buyers;
+live on Vercel with MongoDB Atlas; blockchain anchoring on the Polygon **Amoy testnet**.
+
+**Next:**
+- Polygon mainnet anchoring, with gas sponsored through Alchemy Gas Manager
+- A production SMS OTP provider (MSG91 / Twilio) for sign-in
+- Multilingual voice stories (transcripts and translations)
+- Field-level encryption of personal data (MongoDB CSFLE)
+- Printed tamper-evident tag partners and cooperative onboarding at scale
+
+## Platform at a glance
+
+| Layer | Technology |
+|---|---|
+| Web app & API | Next.js 15 (React 19, server rendering and edge caching), hosted on Vercel |
+| Data & media | MongoDB Atlas; photos and voice notes in GridFS |
+| Integrity | SHA-256 hash-chained ledger, anchored on Polygon via Alchemy (ethers.js) |
+| Identity | Phone OTP sign-in; role-based portals for weavers, co-ops, verifiers and admins |
+| Engagement | Installable web app (PWA) with web-push campaigns |
+
+---
+
+*Developers: demo logins and tag secrets are generated into `DEMO.md` by `npm run seed`;
+blockchain setup is in [`BLOCKCHAIN.md`](BLOCKCHAIN.md).*
