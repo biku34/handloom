@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="SUTRA">
+  <rect width="512" height="512" rx="112" fill="#40101a"/>
+  <g stroke="#e5c383" stroke-width="9" opacity="0.35">
+    <line x1="96" y1="150" x2="416" y2="150"/>
+    <line x1="96" y1="362" x2="416" y2="362"/>
+    <line x1="176" y1="96" x2="176" y2="416"/>
+    <line x1="336" y1="96" x2="336" y2="416"/>
+  </g>
+  <text x="256" y="272" text-anchor="middle" dominant-baseline="central" font-family="Georgia, 'Times New Roman', serif" font-size="300" font-weight="bold" fill="#f8eeda">S</text>
+</svg>

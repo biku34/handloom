@@ -1,10 +1,21 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
   title: { default: "SUTRA — Every thread has a story", template: "%s · SUTRA" },
   description:
     "SUTRA issues a Digital Product Passport for genuine Indian handloom — scan the tag, meet the weaver, verify the craft.",
+  applicationName: "SUTRA",
+  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  // Installs cleanly as a home-screen / desktop app (standalone, no browser chrome).
+  appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "SUTRA" },
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover", // fills the notch/safe-area on installed apps
+  themeColor: "#40101a",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
