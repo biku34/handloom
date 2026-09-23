@@ -2,6 +2,7 @@
 
 import { useRef, useState } from "react";
 import Link from "next/link";
+import { compressImage } from "@/lib/compressImage";
 
 const CRAFTS = [
   { code: 1, name: "Kanjivaram Silk", icon: "🪷" },
@@ -32,6 +33,7 @@ export default function RegisterFlow({ defaultCraftCode }: { defaultCraftCode?: 
   const [step, setStep] = useState<Step>(1);
   const [photo, setPhoto] = useState<File | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string | null>(null);
+  const [preparing, setPreparing] = useState(false); // compressing the chosen photo
   const [craftCode, setCraftCode] = useState<number>(defaultCraftCode || 1);
   const [category, setCategory] = useState("SAREE");
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -71,7 +73,9 @@ export default function RegisterFlow({ defaultCraftCode }: { defaultCraftCode?: 
     fd.append("kind", kind);
     fd.append("purpose", purpose);
     const res = await fetch("/api/media/upload", { method: "POST", body: fd });
-    const data = await res.json();
+    // Vercel answers an oversized body with a plain-text 413 before our route runs.
+    if (res.status === 413) throw new Error("That file is too large to upload — please try a shorter voice note or another photo.");
+    const data = await res.json().catch(() => ({}));
     if (!res.ok) throw new Error(data.title || "Upload failed");
     return data.assetId;
   }
@@ -178,17 +182,28 @@ export default function RegisterFlow({ defaultCraftCode }: { defaultCraftCode?: 
               accept="image/*"
               capture="environment"
               className="hidden"
-              onChange={(e) => {
+              disabled={preparing}
+              onChange={async (e) => {
                 const f = e.target.files?.[0];
-                if (f) {
-                  setPhoto(f);
-                  setPhotoPreview(URL.createObjectURL(f));
+                e.target.value = ""; // allow re-picking the same file after an error
+                if (!f) return;
+                setError(null);
+                setPreparing(true);
+                try {
+                  const small = await compressImage(f);
+                  if (photoPreview) URL.revokeObjectURL(photoPreview);
+                  setPhoto(small);
+                  setPhotoPreview(URL.createObjectURL(small));
+                } catch (err) {
+                  setError((err as Error).message);
+                } finally {
+                  setPreparing(false);
                 }
               }}
             />
-            <span className="btn-secondary mt-4">{photo ? "Retake" : "Open camera / choose photo"}</span>
+            <span className="btn-secondary mt-4">{preparing ? "Preparing photo…" : photo ? "Retake" : "Open camera / choose photo"}</span>
           </label>
-          <button className="btn-primary mt-5 w-full text-base py-3" onClick={() => setStep(2)} disabled={!photo}>
+          <button className="btn-primary mt-5 w-full text-base py-3" onClick={() => setStep(2)} disabled={!photo || preparing}>
             Next →
           </button>
         </div>
