@@ -17,8 +17,14 @@ type InstallPromptEvent = Event & {
   userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
 };
 
+declare global {
+  interface Window {
+    __sutraBIP?: InstallPromptEvent | null;
+  }
+}
+
 const DISMISS_KEY = "sutra_install_dismissed_at";
-const DISMISS_DAYS = 14; // re-offer after two weeks if they dismissed
+const DISMISS_MS = 60 * 60 * 1000; // re-offer one hour after a dismissal
 
 export default function InstallPrompt() {
   const [deferred, setDeferred] = useState<InstallPromptEvent | null>(null);
@@ -39,10 +45,10 @@ export default function InstallPrompt() {
     }
     if (standalone) return;
 
-    // Respect a recent dismissal.
+    // Respect a recent dismissal (now just one hour).
     try {
       const at = Number(localStorage.getItem(DISMISS_KEY) || 0);
-      if (at && Date.now() - at < DISMISS_DAYS * 86_400_000) return;
+      if (at && Date.now() - at < DISMISS_MS) return;
     } catch {
       /* storage blocked — carry on */
     }
@@ -51,19 +57,35 @@ export default function InstallPrompt() {
     // fire `beforeinstallprompt`.
     navigator.serviceWorker.register("/sw.js").catch(() => {});
 
+    // The event may already have fired (before this component mounted) and been
+    // stashed by the early capture script in the layout. Pick it up if so.
+    const pick = () => {
+      const e = window.__sutraBIP;
+      if (e) {
+        setDeferred(e);
+        setShow(true);
+      }
+    };
+    pick();
+
     const onBeforeInstall = (e: Event) => {
       e.preventDefault(); // stop Chrome's default mini-infobar; we show our own
+      window.__sutraBIP = e as InstallPromptEvent;
       setDeferred(e as InstallPromptEvent);
       setShow(true);
     };
     const onInstalled = () => {
+      window.__sutraBIP = null;
       setShow(false);
+      setDeferred(null);
       remember();
     };
     window.addEventListener("beforeinstallprompt", onBeforeInstall);
+    window.addEventListener("sutra-bip", pick); // fired by the early capture script
     window.addEventListener("appinstalled", onInstalled);
     return () => {
       window.removeEventListener("beforeinstallprompt", onBeforeInstall);
+      window.removeEventListener("sutra-bip", pick);
       window.removeEventListener("appinstalled", onInstalled);
     };
   }, []);
@@ -85,6 +107,7 @@ export default function InstallPrompt() {
     } catch {
       /* user dismissed or unsupported */
     }
+    window.__sutraBIP = null; // consumed — a deferred prompt can only be used once
     setDeferred(null);
     setBusy(false);
     setShow(false);
