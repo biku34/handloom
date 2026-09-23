@@ -26,7 +26,7 @@ import { appendLedgerEntry } from "../lib/ledger";
 import { issuePassport, freezePassport } from "../lib/passport";
 import { recordProvenanceEvent } from "../lib/provenance";
 import { registerMaterialLot, computeMaterialHash } from "../lib/materials";
-import { saveMedia } from "../lib/storage";
+import { saveMedia, clearMediaBucket } from "../lib/storage";
 import { scanId as makeScanId } from "../lib/ids";
 
 /* ── placeholder SVG art ── */
@@ -104,6 +104,7 @@ async function main() {
       M.deleteMany({})
     )
   );
+  await clearMediaBucket(); // stored file bytes (GridFS) go with their MediaAsset rows
 
   /* ── Organizations ── */
   const coop = await Organization.create({

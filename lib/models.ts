@@ -404,7 +404,7 @@ const FraudReportSchema = new Schema<any>(
 );
 FraudReportSchema.index({ status: 1, riskScore: -1 });
 
-/* ── mediaAssets (local-disk storage instead of IPFS/R2) ── */
+/* ── mediaAssets (bytes in MongoDB GridFS instead of IPFS/R2) ── */
 const MediaAssetSchema = new Schema<any>(
   {
     kind: { type: String, enum: ["IMAGE", "VIDEO", "AUDIO", "DOCUMENT"], required: true },
@@ -412,7 +412,8 @@ const MediaAssetSchema = new Schema<any>(
     ownerType: String,
     ownerId: { type: Types.ObjectId },
     file: {
-      path: String, // relative path under uploads/
+      gridfsId: { type: Types.ObjectId }, // file in the GridFS "media" bucket
+      path: String, // legacy: relative path under uploads/ (pre-GridFS assets)
       mime: String,
       bytes: Number,
       sha256: String, // content hash — the integrity anchor
