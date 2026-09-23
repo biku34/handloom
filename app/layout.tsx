@@ -6,7 +6,14 @@ export const metadata: Metadata = {
   description:
     "SUTRA issues a Digital Product Passport for genuine Indian handloom — scan the tag, meet the weaver, verify the craft.",
   applicationName: "SUTRA",
-  icons: { icon: "/icon.svg", apple: "/icon.svg" },
+  icons: {
+    icon: [
+      { url: "/icon.svg", type: "image/svg+xml" },
+      { url: "/icon-192.png", sizes: "192x192", type: "image/png" },
+    ],
+    // iOS ignores SVG touch icons — it needs a PNG.
+    apple: { url: "/apple-touch-icon.png", sizes: "180x180" },
+  },
   // Installs cleanly as a home-screen / desktop app (standalone, no browser chrome).
   appleWebApp: { capable: true, statusBarStyle: "black-translucent", title: "SUTRA" },
 };

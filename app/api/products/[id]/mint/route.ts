@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidateTag } from "next/cache";
 import { dbConnect } from "@/lib/db";
 import { requireRole } from "@/lib/auth";
 import { Product } from "@/lib/models";
@@ -31,6 +32,7 @@ export async function POST(_req: NextRequest, ctx: { params: Promise<{ id: strin
     return NextResponse.json({ title: result.error, status: 422 }, { status: 422 });
   }
   await audit({ actorUserId: session.userId, actorRole: session.role, action: "PASSPORT_ISSUED", targetType: "product", targetId: product.passportId });
+  revalidateTag("catalog"); // show the new piece in the storefront immediately
   return NextResponse.json({
     minted: true,
     passportId: product.passportId,

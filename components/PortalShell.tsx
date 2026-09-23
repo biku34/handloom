@@ -1,6 +1,7 @@
 import Link from "next/link";
 import LogoutButton from "./LogoutButton";
 import NavLink from "./NavLink";
+import Logo from "./Logo";
 
 export default function PortalShell({
   title,
@@ -18,8 +19,8 @@ export default function PortalShell({
       <header className="sticky top-0 z-40 bg-gradient-to-b from-maroon-900 to-maroon-800 text-silk-100 shadow-md">
         <div className="mx-auto max-w-6xl px-4 pt-3 pb-2 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3 min-w-0">
-            <Link href="/" className="font-display text-xl font-bold tracking-wide text-silk-200 hover:text-white transition-colors">
-              SUTRA
+            <Link href="/" aria-label="SUTRA home" className="shrink-0">
+              <Logo />
             </Link>
             <span className="hidden sm:inline-flex items-center rounded-full border border-silk-200/25 px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-[0.18em] text-silk-200/80">
               {title}

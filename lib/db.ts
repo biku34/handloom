@@ -13,7 +13,13 @@ export async function dbConnect() {
     // Read the URI lazily (not at import time) so scripts that populate
     // process.env before calling dbConnect() target the right database.
     const uri = process.env.MONGODB_URI || "mongodb://127.0.0.1:27017/sutra";
-    cached.promise = mongoose.connect(uri, { bufferCommands: false });
+    cached.promise = mongoose.connect(uri, {
+      bufferCommands: false,
+      // Serverless-friendly: a small pool per instance, and fail fast (5s)
+      // instead of hanging a page for 30s when Atlas is unreachable.
+      maxPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+    });
   }
   try {
     cached.conn = await cached.promise;

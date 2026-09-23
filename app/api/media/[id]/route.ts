@@ -16,7 +16,9 @@ export async function GET(_req: NextRequest, ctx: { params: Promise<{ id: string
     return new NextResponse(new Uint8Array(buf), {
       headers: {
         "Content-Type": asset.file.mime,
-        "Cache-Control": "public, max-age=31536000, immutable",
+        // s-maxage lets Vercel's CDN keep the file at the edge, so repeat
+        // requests never reach this function or MongoDB.
+        "Cache-Control": "public, max-age=31536000, s-maxage=31536000, immutable",
       },
     });
   } catch {

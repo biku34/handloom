@@ -49,19 +49,33 @@ body {
   background: transparent;
 }
 
-/* gentle page entrance */
+/* gentle page entrance — transform only: fading from opacity 0 kept every
+   page invisible for half a second and delayed the first paint. */
 @keyframes rise {
   from {
-    opacity: 0;
-    transform: translateY(10px);
+    transform: translateY(6px);
   }
   to {
-    opacity: 1;
     transform: translateY(0);
   }
 }
 main {
-  animation: rise 0.45s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+  animation: rise 0.25s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
+
+/* leave room for the fixed bottom tab bar on phones */
+@media (max-width: 767px) {
+  body:has(.bottom-nav) {
+    padding-bottom: calc(4rem + env(safe-area-inset-bottom));
+  }
+}
+
+/* horizontally swipeable chip rows */
+.no-scrollbar {
+  scrollbar-width: none;
+}
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
 }
 @media (prefers-reduced-motion: reduce) {
   main {
@@ -121,36 +135,67 @@ a.card:hover {
 .btn,
 .btn-primary,
 .btn-secondary,
-.btn-green {
+.btn-green,
+.btn-gold,
+.btn-outline-light {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
+  min-height: 2.75rem; /* 44px — comfortable touch target */
   border-radius: 0.75rem;
-  padding: 0.625rem 1rem;
+  padding: 0.625rem 1.125rem;
   font-weight: 600;
   font-size: 0.875rem;
   line-height: 1.25rem;
   cursor: pointer;
-  transition: background-color 0.15s ease, border-color 0.15s ease;
+  transition: background-color 0.15s ease, border-color 0.15s ease, box-shadow 0.15s ease, transform 0.1s ease;
   text-align: center;
+  white-space: nowrap;
+}
+.btn-lg {
+  min-height: 3.25rem;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  font-size: 1rem;
+  border-radius: 0.875rem;
+}
+.btn-gold {
+  background: var(--color-silk-200);
+  color: var(--color-maroon-900);
+  box-shadow: 0 6px 18px -8px rgba(229, 195, 131, 0.7);
+}
+.btn-gold:hover:not(:disabled) {
+  background: var(--color-silk-300);
+}
+.btn-outline-light {
+  color: var(--color-silk-100);
+  border: 1.5px solid rgba(240, 220, 180, 0.45);
+}
+.btn-outline-light:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(240, 220, 180, 0.8);
 }
 .btn:disabled,
 .btn-primary:disabled,
 .btn-secondary:disabled,
-.btn-green:disabled {
+.btn-green:disabled,
+.btn-gold:disabled {
   opacity: 0.5;
   cursor: not-allowed;
 }
 .btn:active:not(:disabled),
 .btn-primary:active:not(:disabled),
 .btn-secondary:active:not(:disabled),
-.btn-green:active:not(:disabled) {
+.btn-green:active:not(:disabled),
+.btn-gold:active:not(:disabled),
+.btn-outline-light:active:not(:disabled) {
   transform: scale(0.975);
 }
 .btn-primary {
   background: var(--color-maroon-700);
   color: #fff;
+  box-shadow: 0 6px 16px -8px rgba(64, 16, 26, 0.55);
 }
 .btn-primary:hover:not(:disabled) {
   background: var(--color-maroon-800);
@@ -176,9 +221,10 @@ a.card:hover {
   border-radius: 0.75rem;
   border: 1px solid var(--color-silk-300);
   background: #fff;
+  min-height: 2.75rem;
   padding: 0.625rem 0.875rem;
-  font-size: 0.875rem;
-  line-height: 1.25rem;
+  font-size: 1rem; /* ≥16px stops iOS Safari zooming in on focus */
+  line-height: 1.5rem;
   outline: none;
 }
 .input:focus {
