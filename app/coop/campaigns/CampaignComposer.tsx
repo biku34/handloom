@@ -76,7 +76,7 @@ export default function CampaignComposer({
   return (
     <div className="grid gap-6 lg:grid-cols-[1fr_320px]">
       {/* ── left: compose ── */}
-      <div>
+      <div className="order-2 lg:order-1">
         {/* templates */}
         <div>
           <div className="flex items-center justify-between">
@@ -200,8 +200,8 @@ export default function CampaignComposer({
         </div>
       </div>
 
-      {/* ── right: live phone preview ── */}
-      <div className="lg:sticky lg:top-24 self-start">
+      {/* ── right: live phone preview (rises above the templates on phones) ── */}
+      <div className="order-1 lg:order-2 lg:sticky lg:top-24 self-start">
         <label className="label">Preview</label>
         <div className="mt-2 rounded-[2rem] bg-maroon-900 p-3 shadow-lg">
           <div className="rounded-[1.5rem] bg-gradient-to-b from-stone-800 to-stone-900 p-4 min-h-52">
