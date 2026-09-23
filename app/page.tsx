@@ -7,9 +7,11 @@ import { getHomeData } from "@/lib/catalog";
 import { mediaUrl } from "@/lib/storage";
 import InstallAppButton from "@/components/InstallAppButton";
 
-// Rebuilt at most once a minute (and immediately when a passport is minted)
-// instead of querying MongoDB on every visit.
-export const revalidate = 60;
+// The header reads the session cookie (getSession), so this page must render
+// per-request — a static `revalidate` cache here served a shell whose client
+// components never hydrated. The expensive DB work is still cached for 60s
+// inside getHomeData (unstable_cache), so this stays fast.
+export const dynamic = "force-dynamic";
 
 type Home = Awaited<ReturnType<typeof getHomeData>>;
 
