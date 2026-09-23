@@ -30,7 +30,9 @@ export async function POST(req: NextRequest) {
   user.auth.otpAttempts = 0;
   await user.save();
 
-  const devMode = process.env.DEV_OTP_MODE === "true";
+  // On-screen OTP is the default (no SMS provider wired yet). Set
+  // DEV_OTP_MODE=false in the environment to turn it off for a real launch.
+  const devMode = process.env.DEV_OTP_MODE !== "false";
   return NextResponse.json({
     sent: true,
     ...(devMode ? { devOtp: otp, devNote: "DEV MODE — OTP shown because no SMS provider is configured" } : {}),
