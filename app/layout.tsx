@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import SplashScreen from "@/components/SplashScreen";
 import InstallPrompt from "@/components/InstallPrompt";
+import NotificationGate from "@/components/NotificationGate";
 
 export const metadata: Metadata = {
   title: { default: "SUTRA — Every thread has a story", template: "%s · SUTRA" },
@@ -39,6 +40,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <div className="weave-border" />
         {children}
         <InstallPrompt />
+        <NotificationGate />
       </body>
     </html>
   );

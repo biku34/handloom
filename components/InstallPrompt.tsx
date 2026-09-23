@@ -3,13 +3,13 @@
 import { useEffect, useState } from "react";
 
 /**
- * Android/Chromium install prompt with a single button that (1) installs the
- * PWA and (2) turns on push notifications. It only appears where the browser
- * fires `beforeinstallprompt` — i.e. installable Chromium browsers, which in
- * practice means Android. iOS never fires the event, so it simply never shows
- * there (no iOS handling by design, per request).
+ * Android/Chromium "Install app" prompt. It only appears where the browser
+ * fires `beforeinstallprompt` — installable Chromium browsers, i.e. Android in
+ * practice. iOS never fires the event, so it never shows there (by design).
  *
- * The notification half reuses the same flow as components/NotificationOptIn.
+ * This only installs the PWA. Notifications are NOT requested here — that
+ * happens inside the installed app on first open (see NotificationGate) and is
+ * managed from the purchases section.
  */
 
 type InstallPromptEvent = Event & {
@@ -19,15 +19,6 @@ type InstallPromptEvent = Event & {
 
 const DISMISS_KEY = "sutra_install_dismissed_at";
 const DISMISS_DAYS = 14; // re-offer after two weeks if they dismissed
-
-function urlBase64ToUint8Array(base64String: string): Uint8Array<ArrayBuffer> {
-  const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
-  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
-  const raw = atob(base64);
-  const out = new Uint8Array(new ArrayBuffer(raw.length));
-  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i);
-  return out;
-}
 
 export default function InstallPrompt() {
   const [deferred, setDeferred] = useState<InstallPromptEvent | null>(null);
@@ -57,7 +48,7 @@ export default function InstallPrompt() {
     }
 
     // Registering the SW is what makes Chrome evaluate installability and then
-    // fire `beforeinstallprompt`. Also readies the SW for push.
+    // fire `beforeinstallprompt`.
     navigator.serviceWorker.register("/sw.js").catch(() => {});
 
     const onBeforeInstall = (e: Event) => {
@@ -85,64 +76,16 @@ export default function InstallPrompt() {
     }
   }
 
-  /* Subscribe this device to push — mirrors NotificationOptIn, but anonymous
-     (no phone) since a public visitor may not be signed in. Fails silently if
-     push isn't configured on the server. */
-  async function enableNotifications() {
-    try {
-      if (!("PushManager" in window) || !("Notification" in window)) return;
-      if (Notification.permission === "denied") return;
-      const cfg = await fetch("/api/push/subscribe").then((r) => r.json()).catch(() => null);
-      if (!cfg?.enabled || !cfg.publicKey) return;
-      const permission = await Notification.requestPermission();
-      if (permission !== "granted") return;
-      const reg = await navigator.serviceWorker.ready;
-      const keyBytes = urlBase64ToUint8Array(cfg.publicKey);
-      let sub = await reg.pushManager.getSubscription();
-      // Drop a stale subscription bound to an old VAPID key before re-creating.
-      if (sub) {
-        const cur = sub.options?.applicationServerKey;
-        const a = cur ? new Uint8Array(cur) : null;
-        const matches = a && a.length === keyBytes.length && a.every((b, i) => b === keyBytes[i]);
-        if (!matches) {
-          try {
-            await sub.unsubscribe();
-          } catch {
-            /* ignore */
-          }
-          sub = null;
-        }
-      }
-      if (!sub) {
-        sub = await reg.pushManager.subscribe({
-          userVisibleOnly: true,
-          applicationServerKey: keyBytes,
-        });
-      }
-      await fetch("/api/push/subscribe", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ subscription: sub }),
-      });
-    } catch {
-      /* best-effort — never block the install on a push hiccup */
-    }
-  }
-
   async function handleInstall() {
+    if (!deferred) return;
     setBusy(true);
-    // 1) Fire the native install dialog first (it needs the fresh user gesture).
-    if (deferred) {
-      try {
-        await deferred.prompt();
-        await deferred.userChoice;
-      } catch {
-        /* user dismissed or unsupported */
-      }
-      setDeferred(null);
+    try {
+      await deferred.prompt();
+      await deferred.userChoice;
+    } catch {
+      /* user dismissed or unsupported */
     }
-    // 2) Then ask for notifications and store the push subscription.
-    await enableNotifications();
+    setDeferred(null);
     setBusy(false);
     setShow(false);
     remember();
@@ -164,7 +107,7 @@ export default function InstallPrompt() {
           <div className="min-w-0 flex-1">
             <p className="font-display text-[15px] font-bold text-maroon-900">Get the SUTRA app</p>
             <p className="mt-0.5 text-[13px] leading-snug text-stone-600">
-              Add it to your home screen and we&apos;ll ping you the moment new handloom drops.
+              Add it to your home screen for one-tap access to your pieces and their stories.
             </p>
           </div>
           <button
@@ -177,7 +120,7 @@ export default function InstallPrompt() {
           </button>
         </div>
         <button type="button" onClick={handleInstall} disabled={busy} className="btn-primary btn-lg mt-3 w-full">
-          {busy ? "Setting up…" : "Install & turn on updates"}
+          {busy ? "Installing…" : "Install app"}
         </button>
       </div>
     </div>
