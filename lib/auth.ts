@@ -40,13 +40,22 @@ export async function setSessionCookie(res: NextResponse, token: string) {
   res.cookies.set(COOKIE, token, {
     httpOnly: true,
     sameSite: "lax",
+    // Secure only in production — on http://localhost a Secure cookie would be
+    // dropped and you'd never stay logged in during local dev.
+    secure: process.env.NODE_ENV === "production",
     path: "/",
     maxAge: 60 * 60 * 24 * 7,
   });
 }
 
 export function clearSessionCookie(res: NextResponse) {
-  res.cookies.set(COOKIE, "", { httpOnly: true, path: "/", maxAge: 0 });
+  res.cookies.set(COOKIE, "", {
+    httpOnly: true,
+    sameSite: "lax",
+    secure: process.env.NODE_ENV === "production",
+    path: "/",
+    maxAge: 0,
+  });
 }
 
 /** For API routes: returns session or a 401/403 response. */

@@ -1,152 +1,19 @@
-"use client";
-
-import { Suspense, useState } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { Suspense } from "react";
 import Link from "next/link";
-import SiteHeader from "@/components/SiteHeader";
+import { redirect } from "next/navigation";
+import SiteHeader, { portalHome } from "@/components/SiteHeader";
 import { LogoMark } from "@/components/Logo";
+import LoginForm from "@/components/LoginForm";
+import { getSession } from "@/lib/auth";
 
-function LoginForm() {
-  const router = useRouter();
-  const params = useSearchParams();
-  const [phone, setPhone] = useState("");
-  const [otp, setOtp] = useState("");
-  const [devOtp, setDevOtp] = useState<string | null>(null);
-  const [stage, setStage] = useState<"phone" | "otp">("phone");
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  async function requestOtp(e: { preventDefault(): void }) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/auth/otp/request", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.detail || data.title || "Could not send OTP");
-        return;
-      }
-      if (data.devOtp) setDevOtp(data.devOtp);
-      setStage("otp");
-    } finally {
-      setBusy(false);
-    }
+export default async function LoginPage() {
+  // Already signed in → don't show the login form again; send them home.
+  const session = await getSession();
+  if (session) {
+    const home = portalHome(session.role);
+    redirect(home !== "/" ? home : "/purchases");
   }
 
-  async function verifyOtp(e: React.FormEvent) {
-    e.preventDefault();
-    setBusy(true);
-    setError(null);
-    try {
-      const res = await fetch("/api/auth/otp/verify", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, otp }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setError(data.title || "Verification failed");
-        return;
-      }
-      router.push(params.get("next") || data.home || "/");
-      router.refresh();
-    } finally {
-      setBusy(false);
-    }
-  }
-
-  const digits = phone.replace(/\D/g, "");
-
-  return (
-    <div className="mt-6 rounded-3xl bg-white p-6 ring-1 ring-silk-200 shadow-[0_12px_40px_-20px_rgba(64,16,26,0.35)]">
-      {/* step indicator */}
-      <div className="mb-5 flex items-center gap-2 text-[11px] font-bold uppercase tracking-wider">
-        <span className={`flex h-6 w-6 items-center justify-center rounded-full ${stage === "phone" ? "bg-maroon-700 text-white" : "bg-leaf-600 text-white"}`}>
-          {stage === "phone" ? "1" : "✓"}
-        </span>
-        <span className={stage === "phone" ? "text-maroon-900" : "text-stone-400"}>Phone</span>
-        <span className="h-px flex-1 bg-silk-200" />
-        <span className={`flex h-6 w-6 items-center justify-center rounded-full ${stage === "otp" ? "bg-maroon-700 text-white" : "bg-silk-100 text-stone-400"}`}>2</span>
-        <span className={stage === "otp" ? "text-maroon-900" : "text-stone-400"}>Verify</span>
-      </div>
-
-      {error && <div className="mb-4 rounded-xl bg-red-50 border border-red-200 text-red-800 px-4 py-3 text-sm">{error}</div>}
-
-      {stage === "phone" ? (
-        <form onSubmit={requestOtp} className="space-y-5">
-          <div>
-            <label className="label" htmlFor="phone">Mobile number</label>
-            <div className="flex h-13 items-stretch overflow-hidden rounded-xl border border-silk-300 bg-white focus-within:border-maroon-600 focus-within:ring-3 focus-within:ring-maroon-600/15">
-              <span className="flex items-center gap-1.5 border-r border-silk-200 bg-silk-50 px-3.5 text-base font-semibold text-stone-600">
-                +91
-              </span>
-              <input
-                id="phone"
-                type="tel"
-                inputMode="numeric"
-                autoComplete="tel-national"
-                className="min-w-0 flex-1 bg-transparent px-3.5 text-lg tracking-wide outline-none"
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="98765 43210"
-                autoFocus
-              />
-            </div>
-            <p className="mt-2 text-xs text-stone-500">We&apos;ll text you a 6-digit code.</p>
-          </div>
-          <button className="btn-primary btn-lg w-full" disabled={busy || digits.length < 10}>
-            {busy ? "Sending code…" : "Continue"}
-          </button>
-        </form>
-      ) : (
-        <form onSubmit={verifyOtp} className="space-y-5">
-          <p className="text-sm text-stone-600">
-            Code sent to <strong className="text-maroon-900">+91 {digits.slice(-10)}</strong>{" "}
-            <button type="button" className="font-semibold text-maroon-700 underline-offset-2 hover:underline" onClick={() => { setStage("phone"); setOtp(""); setDevOtp(null); setError(null); }}>
-              Change
-            </button>
-          </p>
-          {devOtp && (
-            <div className="rounded-xl bg-amber-50 border border-amber-300 px-4 py-3 text-sm text-amber-900">
-              <strong>DEV MODE</strong> — no SMS provider configured. Your code is{" "}
-              <button type="button" className="font-mono text-lg font-bold underline decoration-dotted" onClick={() => setOtp(devOtp)}>
-                {devOtp}
-              </button>
-              <span className="block text-xs mt-0.5">Tap it to fill in.</span>
-            </div>
-          )}
-          <div>
-            <label className="label" htmlFor="otp">Enter 6-digit code</label>
-            <input
-              id="otp"
-              className="input h-14 font-mono text-center text-2xl tracking-[0.5em]"
-              inputMode="numeric"
-              autoComplete="one-time-code"
-              maxLength={6}
-              value={otp}
-              onChange={(e) => setOtp(e.target.value.replace(/\D/g, ""))}
-              placeholder="••••••"
-              autoFocus
-            />
-          </div>
-          <button className="btn-primary btn-lg w-full" disabled={busy || otp.length !== 6}>
-            {busy ? "Verifying…" : "Verify & sign in"}
-          </button>
-          <button type="button" className="w-full text-sm font-semibold text-maroon-700 hover:underline disabled:opacity-50" disabled={busy} onClick={(e) => requestOtp(e)}>
-            Didn&apos;t get it? Resend code
-          </button>
-        </form>
-      )}
-    </div>
-  );
-}
-
-export default function LoginPage() {
   return (
     <div>
       <SiteHeader />

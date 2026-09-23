@@ -4,17 +4,19 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import Icon from "./Icon";
 
-const TABS = [
-  { href: "/", label: "Home", icon: "home", match: (p: string) => p === "/" },
-  { href: "/explore", label: "Shop", icon: "grid", match: (p: string) => p.startsWith("/explore") || p.startsWith("/p/") || p.startsWith("/weaver/") },
-  { href: "/verify", label: "Scan", icon: "scan", match: (p: string) => p.startsWith("/verify"), primary: true },
-  { href: "/purchases", label: "Purchases", icon: "bag", match: (p: string) => p.startsWith("/purchases") },
-  { href: "/login", label: "Account", icon: "user", match: (p: string) => p.startsWith("/login") },
-];
-
-/** App-style tab bar for phones (hidden from md up, where the header nav takes over). */
-export default function BottomNav() {
+/** App-style tab bar for phones (hidden from md up, where the header nav takes over).
+    `account` is set when a user is signed in — the Account tab then deep-links to
+    their portal/purchases instead of the login screen. */
+export default function BottomNav({ account }: { account?: { home: string } | null }) {
   const pathname = usePathname() || "/";
+  const accountHref = account?.home || "/login";
+  const TABS = [
+    { href: "/", label: "Home", icon: "home", match: (p: string) => p === "/" },
+    { href: "/explore", label: "Shop", icon: "grid", match: (p: string) => p.startsWith("/explore") || p.startsWith("/p/") || p.startsWith("/weaver/") },
+    { href: "/verify", label: "Scan", icon: "scan", match: (p: string) => p.startsWith("/verify"), primary: true },
+    { href: "/purchases", label: "Purchases", icon: "bag", match: (p: string) => p.startsWith("/purchases") },
+    { href: accountHref, label: "Account", icon: "user", match: (p: string) => p.startsWith("/login") || p.startsWith("/w") || p.startsWith("/coop") || p.startsWith("/admin") },
+  ];
   return (
     <nav
       aria-label="Primary"
