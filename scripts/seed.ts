@@ -81,6 +81,18 @@ async function svgAsset(svg: string, purpose: string, kind: "IMAGE" = "IMAGE") {
   return asset._id;
 }
 
+// Real handloom photo from the photos/ folder, if it exists (else returns null → SVG fallback).
+const PHOTO_DIR = path.join(process.cwd(), "photos");
+const PHOTO_MIME: Record<string, string> = { ".png": "image/png", ".jpg": "image/jpeg", ".jpeg": "image/jpeg", ".webp": "image/webp" };
+async function photoAsset(file: string, purpose: string) {
+  const full = path.join(PHOTO_DIR, file);
+  if (!file || !fs.existsSync(full)) return null;
+  const buffer = fs.readFileSync(full);
+  const mime = PHOTO_MIME[path.extname(file).toLowerCase()] || "image/png";
+  const asset = await saveMedia({ buffer, mime, kind: "IMAGE", purpose, originalName: file });
+  return asset._id;
+}
+
 const rand = (n: number) => Math.floor(Math.random() * n);
 const daysAgo = (d: number) => new Date(Date.now() - d * 86400000);
 
@@ -240,11 +252,13 @@ async function main() {
     narrative: { title: string; body: string; culturalNote?: string };
     certs: { type: string; number: string; issuedBy: string }[];
     dispatched?: boolean; claimed?: boolean; scans: number;
+    photo?: string; gallery?: string[]; // real handloom photos from photos/ (else generated art)
   };
   const productDefs: ProdDef[] = [
     {
       weaver: "murugan-kanchipuram",
       name: "Kanjivaram Silk Saree — Peacock Blue with Temple Border",
+      photo: "Screenshot 2026-07-16 205349.png", gallery: ["Screenshot 2026-07-16 210814.png"],
       category: "SAREE", colors: ["#0f6a8b", "#123c53", "#c9a227"],
       specs: { lengthCm: 630, widthCm: 118, weightGrams: 720, zariType: "PURE_SILVER_GOLD_PLATED", zariGrams: 180, colours: ["Peacock Blue", "Maroon", "Gold"], motifs: ["Temple Border", "Mayil Chakram", "Rudraksham"], weaveTechnique: "KORVAI", dyeType: "AZO_FREE_CHEMICAL", threadCount: { warp: 60, weft: 56 } },
       hours: 118, price: [45000, 62000],
@@ -263,6 +277,7 @@ async function main() {
     {
       weaver: "murugan-kanchipuram",
       name: "Kanjivaram Silk Saree — Maroon with Gold Checks",
+      photo: "Screenshot 2026-07-16 153606.png",
       category: "SAREE", colors: ["#7a1f2b", "#4a1019", "#c9a227"],
       specs: { lengthCm: 620, weightGrams: 680, zariType: "PURE_SILVER_GOLD_PLATED", zariGrams: 140, colours: ["Maroon", "Gold"], motifs: ["Kottadi Checks", "Rudraksham"], weaveTechnique: "KORVAI", dyeType: "AZO_FREE_CHEMICAL" },
       hours: 96, price: [38000, 48000],
@@ -273,6 +288,7 @@ async function main() {
     {
       weaver: "lakshmi-pochampally",
       name: "Pochampally Ikat Silk Saree — Indigo Diamond Grid",
+      photo: "Screenshot 2026-08-03 113257.png",
       category: "SAREE", colors: ["#25446b", "#16263e", "#b9452e"],
       specs: { lengthCm: 600, weightGrams: 520, colours: ["Indigo", "Rust", "Ivory"], motifs: ["Diamond Grid", "Chowka"], weaveTechnique: "DOUBLE_IKAT", dyeType: "NATURAL" },
       hours: 84, price: [12000, 18000],
@@ -287,6 +303,7 @@ async function main() {
     {
       weaver: "lakshmi-pochampally",
       name: "Ikat Cotton Dupatta — Rust Chevron",
+      photo: "Screenshot 2026-07-20 104611.png",
       category: "DUPATTA", colors: ["#b9452e", "#7d2c1c", "#e8d9b0"],
       specs: { lengthCm: 240, weightGrams: 180, colours: ["Rust", "Ivory"], motifs: ["Chevron"], weaveTechnique: "SINGLE_IKAT", dyeType: "NATURAL" },
       hours: 22, price: [2400, 3200],
@@ -297,6 +314,7 @@ async function main() {
     {
       weaver: "abdul-banarasi",
       name: "Banarasi Katan Silk Saree — Ivory Kadhua Butis",
+      photo: "Screenshot 2026-07-16 164241.png",
       category: "SAREE", colors: ["#efe6d0", "#d9c49a", "#a13c4e"],
       specs: { lengthCm: 610, weightGrams: 640, zariType: "PURE_SILVER", zariGrams: 160, colours: ["Ivory", "Rose", "Silver"], motifs: ["Kadhua Butis", "Konia Paisley"], weaveTechnique: "KADHUA", dyeType: "AZO_FREE_CHEMICAL" },
       hours: 140, price: [52000, 70000],
@@ -311,6 +329,7 @@ async function main() {
     {
       weaver: "abdul-banarasi",
       name: "Banarasi Silk Stole — Midnight Konia",
+      photo: "Screenshot 2026-07-17 205157.png",
       category: "STOLE", colors: ["#1d2440", "#0e1226", "#c9a227"],
       specs: { lengthCm: 210, weightGrams: 160, zariType: "TESTED_ZARI", colours: ["Midnight Blue", "Gold"], motifs: ["Konia Paisley"], weaveTechnique: "CUTWORK", dyeType: "AZO_FREE_CHEMICAL" },
       hours: 30, price: [6500, 9000],
@@ -326,8 +345,15 @@ async function main() {
 
   for (const def of productDefs) {
     const w = weavers[def.weaver];
-    const primaryAssetId = await svgAsset(sareeSvg(def.colors[0], def.colors[1], def.colors[2], def.name.split("—")[0].trim()), "PRODUCT_PRIMARY");
-    const onLoomAssetId = await svgAsset(loomSvg(def.colors[0], def.colors[2]), "ON_LOOM");
+    // Prefer a real handloom photo from photos/; fall back to generated art.
+    const realPhoto = def.photo ? await photoAsset(def.photo, "ON_LOOM") : null;
+    const primaryAssetId = realPhoto || (await svgAsset(sareeSvg(def.colors[0], def.colors[1], def.colors[2], def.name.split("—")[0].trim()), "PRODUCT_PRIMARY"));
+    const onLoomAssetId = realPhoto || (await svgAsset(loomSvg(def.colors[0], def.colors[2]), "ON_LOOM"));
+    const galleryAssets: unknown[] = [];
+    for (const g of def.gallery || []) {
+      const a = await photoAsset(g, "PRODUCT_GALLERY");
+      if (a) galleryAssets.push(a);
+    }
 
     const passportId = (await import("../lib/hash")).generatePassportId();
     const product = await Product.create({
@@ -341,7 +367,7 @@ async function main() {
         production: { startedAt: daysAgo(140), completedAt: daysAgo(30), loomHours: def.hours, weaverCount: def.specs.weaveTechnique === "KORVAI" ? 2 : 1 },
         priceRange: { min: def.price[0], max: def.price[1], currency: "INR" },
       },
-      media: { primaryAssetId, onLoomAssetId, gallery: [] },
+      media: { primaryAssetId, onLoomAssetId, gallery: galleryAssets },
       narrative: def.narrative,
       status: "DRAFT",
       custody: { currentHolderType: "WEAVER", currentHolderName: w.profile.displayName, since: daysAgo(30) },
