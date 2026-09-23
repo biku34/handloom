@@ -107,6 +107,85 @@ main {
   font-family: var(--font-serif-display);
 }
 
+/* ── Installed-app launch splash (see components/SplashScreen.tsx) ── */
+#sutra-splash {
+  display: none;
+}
+#sutra-splash.is-shown {
+  display: flex;
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  background: var(--color-maroon-900);
+  color: var(--color-silk-100);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  opacity: 1;
+  transition: opacity 0.55s ease;
+}
+#sutra-splash.is-hiding {
+  opacity: 0;
+  pointer-events: none;
+}
+.sutra-splash__inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  animation: sutra-splash-rise 0.6s ease both;
+}
+.sutra-splash__mark {
+  width: 84px;
+  height: 84px;
+  border-radius: 20px;
+  box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.6);
+}
+.sutra-splash__word {
+  margin-top: 22px;
+  font-family: var(--font-serif-display);
+  font-size: 40px;
+  font-weight: 700;
+  letter-spacing: 0.22em;
+  /* nudge the whole word right so the tracking on the last letter looks centred */
+  text-indent: 0.22em;
+  color: var(--color-silk-100);
+}
+.sutra-splash__tag {
+  margin-top: 10px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: color-mix(in srgb, var(--color-silk-300) 85%, transparent);
+}
+.sutra-splash__weave {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: max(28px, env(safe-area-inset-bottom));
+  height: 4px;
+  width: 96px;
+  margin: 0 auto;
+  border-radius: 999px;
+  background: repeating-linear-gradient(90deg, #8c2f39 0 10px, #e5c383 10px 14px, #571722 14px 24px, #e5c383 24px 28px);
+  opacity: 0.85;
+}
+@keyframes sutra-splash-rise {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .sutra-splash__inner {
+    animation: none;
+  }
+}
+
 /* woven top border used on public pages */
 .weave-border {
   height: 6px;

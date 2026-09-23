@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
+import SplashScreen from "@/components/SplashScreen";
 
 export const metadata: Metadata = {
   title: { default: "SUTRA — Every thread has a story", template: "%s · SUTRA" },
@@ -33,6 +34,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     // it does NOT hide genuine hydration bugs inside the app's components.
     <html lang="en" suppressHydrationWarning>
       <body className="min-h-screen antialiased" suppressHydrationWarning>
+        <SplashScreen />
         <div className="weave-border" />
         {children}
       </body>
