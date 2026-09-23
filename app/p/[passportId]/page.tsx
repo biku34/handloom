@@ -58,11 +58,12 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
 
   const vb =
     ({
-      GENUINE: { icon: "✓", ring: "bg-leaf-600", card: "bg-white border-leaf-600/40", title: "Genuine handloom", sub: `Verified & recorded on a tamper-evident ledger${verifiedDate ? ` · ${verifiedDate}` : ""}` },
-      PENDING: { icon: "⏳", ring: "bg-amber-500", card: "bg-amber-50 border-amber-200", title: "Confirmation pending", sub: verdict.message },
-      FLAGGED: { icon: "!", ring: "bg-orange-600", card: "bg-orange-50 border-orange-300", title: "Caution — under review", sub: verdict.warnings[0] || verdict.message },
-      VOIDED: { icon: "✕", ring: "bg-red-700", card: "bg-red-50 border-red-300", title: "Passport voided", sub: verdict.warnings[0] || verdict.message },
-    } as Record<string, { icon: string; ring: string; card: string; title: string; sub: string }>)[verdict.status] ?? { icon: "⏳", ring: "bg-amber-500", card: "bg-amber-50 border-amber-200", title: "Pending", sub: verdict.message };
+      GENUINE: { icon: "✓", ring: "bg-leaf-600", badge: "bg-leaf-600/10 text-leaf-700 border-leaf-600/30", title: "Genuine handloom", sub: `Verified & recorded on a tamper-evident ledger${verifiedDate ? ` · ${verifiedDate}` : ""}` },
+      PENDING: { icon: "⏳", ring: "bg-amber-500", badge: "bg-amber-50 text-amber-800 border-amber-300", title: "Confirmation pending", sub: verdict.message },
+      FLAGGED: { icon: "!", ring: "bg-orange-600", badge: "bg-orange-50 text-orange-800 border-orange-300", title: "Caution — under review", sub: verdict.warnings[0] || verdict.message },
+      VOIDED: { icon: "✕", ring: "bg-red-700", badge: "bg-red-50 text-red-800 border-red-300", title: "Passport voided", sub: verdict.warnings[0] || verdict.message },
+    } as Record<string, { icon: string; ring: string; badge: string; title: string; sub: string }>)[verdict.status] ?? { icon: "⏳", ring: "bg-amber-500", badge: "bg-amber-50 text-amber-800 border-amber-300", title: "Pending", sub: verdict.message };
+  const isGenuine = verdict.status === "GENUINE";
 
   // the few most impressive facts, as chips
   const keyFacts = [
@@ -79,17 +80,8 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
       <main className="mx-auto max-w-5xl px-4 py-6 pb-28 lg:pb-16">
         <ScanBeacon passportId={passportId} />
 
-        {/* ── verdict trust bar — the instant answer, above everything ── */}
-        <div className={`rounded-2xl border p-4 sm:p-5 flex items-center gap-4 ${vb.card}`}>
-          <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-2xl font-bold text-white ${vb.ring}`}>{vb.icon}</div>
-          <div className="min-w-0">
-            <p className="font-display text-lg sm:text-xl font-bold text-maroon-900">{vb.title}</p>
-            <p className="text-sm text-stone-600">{vb.sub}</p>
-          </div>
-        </div>
-
         {/* ── weaver sidebar (desktop-left) + product main; product shows first on mobile ── */}
-        <div className="mt-5 grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
+        <div className="grid gap-6 lg:grid-cols-[300px_minmax(0,1fr)] lg:items-start">
           {/* ── THE MAKER ── */}
           {weaver && (
             <aside className="order-2 lg:order-1 lg:sticky lg:top-6">
@@ -154,7 +146,18 @@ export default async function VerifyPage({ params }: { params: Promise<{ passpor
 
             {/* name + key facts + credentials — the "what is it" at a glance */}
             <section className="order-2 card p-5 sm:p-6">
-              <span className="text-xs font-semibold uppercase tracking-wide text-silk-700">{product.craft}</span>
+              {/* compact verdict badge — small but evident, replaces the old
+                  full-width trust bar that sat at the top of the page */}
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold ${vb.badge}`}
+                title={vb.sub}
+              >
+                <span className={`flex h-4 w-4 shrink-0 items-center justify-center rounded-full text-[9px] font-bold text-white ${vb.ring}`}>{vb.icon}</span>
+                {vb.title}
+                {isGenuine && verifiedDate && <span className="font-medium opacity-70">· {verifiedDate}</span>}
+              </span>
+              {!isGenuine && <p className="mt-2 text-xs leading-relaxed text-stone-600">{vb.sub}</p>}
+              <span className="mt-3 block text-xs font-semibold uppercase tracking-wide text-silk-700">{product.craft}</span>
               <h1 className="font-display mt-0.5 text-2xl sm:text-3xl font-bold text-maroon-900">{product.name}</h1>
               {keyFacts.length > 0 && (
                 <div className="mt-3 flex flex-wrap gap-2">
