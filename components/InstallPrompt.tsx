@@ -24,7 +24,7 @@ declare global {
 }
 
 const DISMISS_KEY = "sutra_install_dismissed_at";
-const DISMISS_MS = 60 * 60 * 1000; // re-offer one hour after a dismissal
+const DISMISS_MS = 10 * 1000; // re-offer 10 seconds after a dismissal
 
 export default function InstallPrompt() {
   const [deferred, setDeferred] = useState<InstallPromptEvent | null>(null);
