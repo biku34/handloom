@@ -201,7 +201,7 @@ export default async function LandingPage() {
               [stats.ledger, "Ledger records"],
             ].map(([n, label]) => (
               <div key={String(label)} className="rounded-2xl bg-white p-4 text-center ring-1 ring-silk-200">
-                <div className="font-display text-2xl font-bold text-maroon-700">{Number(n).toLocaleString()}</div>
+                <div className="font-display text-2xl font-bold text-maroon-700">{Number(n).toLocaleString("en-IN")}</div>
                 <div className="mt-0.5 text-[11px] font-semibold uppercase tracking-wide text-silk-700">{label}</div>
               </div>
             ))}

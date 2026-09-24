@@ -93,7 +93,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
             <p className="mt-0.5 text-sm text-stone-500">
               {filtered
                 ? `${products.length} ${products.length === 1 ? "piece" : "pieces"} found`
-                : `${total.toLocaleString()} verified pieces, each with a face and a story`}
+                : `${total.toLocaleString("en-IN")} verified pieces, each with a face and a story`}
             </p>
           </div>
           {filtered && (

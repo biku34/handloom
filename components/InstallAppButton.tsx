@@ -36,9 +36,18 @@ export default function InstallAppButton() {
     // a native install becomes available for the click below.
     if ("serviceWorker" in navigator) navigator.serviceWorker.register("/sw.js").catch(() => {});
 
+    // Capture the install event so a click can trigger the native dialog.
+    const onBIP = (e: Event) => {
+      e.preventDefault();
+      (window as unknown as { __sutraBIP?: BIP | null }).__sutraBIP = e as BIP;
+    };
     const onInstalled = () => setInstalled(true);
+    window.addEventListener("beforeinstallprompt", onBIP);
     window.addEventListener("appinstalled", onInstalled);
-    return () => window.removeEventListener("appinstalled", onInstalled);
+    return () => {
+      window.removeEventListener("beforeinstallprompt", onBIP);
+      window.removeEventListener("appinstalled", onInstalled);
+    };
   }, []);
 
   async function onClick() {
