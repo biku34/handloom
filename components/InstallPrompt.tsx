@@ -119,6 +119,11 @@ export default function InstallPrompt() {
   function dismiss() {
     setShow(false);
     remember();
+    // Bring it back on the same page after the cooldown, as long as install is
+    // still available and the app hasn't been installed meanwhile.
+    window.setTimeout(() => {
+      if (window.__sutraBIP) setShow(true);
+    }, DISMISS_MS);
   }
 
   if (!show || !deferred) return null;
