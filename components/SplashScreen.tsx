@@ -37,36 +37,14 @@ export default function SplashScreen() {
       return;
     }
 
-    // Installed app: mark <html> so CSS shows the splash on iOS too.
+    // Installed app: mark <html> so CSS shows the splash on iOS too, then hold
+    // it briefly and fade out.
     document.documentElement.classList.add("pwa");
-
-    // Launch sequence: SUTRA screen → homepage. Hold the splash for at least
-    // MIN_MS from launch and until the streamed page HTML has fully arrived
-    // (readyState leaves "loading" once the last streamed chunk is parsed), so
-    // the "Weaving the page…" loader underneath never flashes on a normal
-    // connection. On a slow network we stop waiting at MAX_MS and fade anyway —
-    // the loader then shows until the page arrives.
-    const MIN_MS = 1200;
-    const MAX_MS = 2500;
-    const FADE_MS = 650;
-    const timers: number[] = [];
-    let done = false;
-    const fade = () => {
-      if (done) return;
-      done = true;
-      setPhase("hiding");
-      timers.push(window.setTimeout(() => setPhase("gone"), FADE_MS));
-    };
-    const elapsed = () => performance.now(); // ms since the app was launched
-    const onReady = () => timers.push(window.setTimeout(fade, Math.max(0, MIN_MS - elapsed())));
-
-    if (document.readyState !== "loading") onReady();
-    else document.addEventListener("DOMContentLoaded", onReady, { once: true });
-    timers.push(window.setTimeout(fade, Math.max(0, MAX_MS - elapsed())));
-
+    const t1 = window.setTimeout(() => setPhase("hiding"), 1200);
+    const t2 = window.setTimeout(() => setPhase("gone"), 1200 + 650);
     return () => {
-      document.removeEventListener("DOMContentLoaded", onReady);
-      timers.forEach((t) => window.clearTimeout(t));
+      window.clearTimeout(t1);
+      window.clearTimeout(t2);
     };
   }, []);
 
@@ -74,10 +52,18 @@ export default function SplashScreen() {
 
   return (
     <div id="sutra-splash" aria-hidden="true" className={phase === "hiding" ? "is-hiding" : undefined}>
-      {/* The first screen the user sees: the OS launch screen is a plain maroon
-          field (manifest launch icon is blank maroon), and this wordmark appears
-          on it — no S logo anywhere in the launch sequence. */}
       <div className="sutra-splash__inner">
+        <svg viewBox="0 0 64 64" className="sutra-splash__mark" aria-hidden="true">
+          <rect width="64" height="64" rx="16" fill="#40101a" />
+          <path
+            d="M44.5 19.5C41 14 23 13 22.5 23.5 22 32.5 42 30.5 42 41.5 42 51.5 24 52 19.5 45"
+            fill="none"
+            stroke="#e5c383"
+            strokeWidth="7"
+            strokeLinecap="round"
+          />
+          <circle cx="44.5" cy="19.5" r="2" fill="#40101a" />
+        </svg>
         <div className="sutra-splash__word">SUTRA</div>
         <div className="sutra-splash__tag">Every thread has a story</div>
       </div>
