@@ -44,9 +44,13 @@ export const getHomeData = unstable_cache(
 );
 
 export const getCatalog = unstable_cache(
-  async (craft?: string, category?: string, q?: string) => {
+  async (craft?: string, category?: string, q?: string, includeClaimed?: boolean) => {
     await dbConnect();
-    const filter: Record<string, unknown> = { ...PUBLIC };
+    // Default view shows only pieces still looking for a home (unclaimed).
+    const base: Record<string, unknown> = { ...PUBLIC };
+    if (!includeClaimed) base["authenticity.claimedByConsumer"] = { $ne: true };
+
+    const filter: Record<string, unknown> = { ...base };
     if (craft) filter["item.craft.name"] = craft;
     if (category) filter["item.category"] = category;
     if (q) {
@@ -55,9 +59,9 @@ export const getCatalog = unstable_cache(
     }
     const [products, crafts, categories, total, makers] = await Promise.all([
       Product.find(filter).sort({ createdAt: -1 }).limit(48).populate("weaverId", CARD_WEAVER_FIELDS).lean(),
-      Product.distinct("item.craft.name", PUBLIC),
-      Product.distinct("item.category", PUBLIC),
-      Product.countDocuments(PUBLIC),
+      Product.distinct("item.craft.name", base),
+      Product.distinct("item.category", base),
+      Product.countDocuments(base),
       Weaver.find({ "verification.status": "VERIFIED", status: "ACTIVE" })
         .sort({ "stats.totalScans": -1 })
         .limit(6)
@@ -72,6 +76,6 @@ export const getCatalog = unstable_cache(
       makers: makers as CatalogProduct[],
     });
   },
-  ["catalog-v1"],
+  ["catalog-v2"],
   { revalidate: REVALIDATE, tags: ["catalog"] }
 );

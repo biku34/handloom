@@ -13,13 +13,18 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const { id } = await ctx.params;
   if (!mongoose.isValidObjectId(id)) return NextResponse.json({ title: "Not found", status: 404 }, { status: 404 });
 
-  const product = await Product.findById(id).select("weaverId orgId").lean<{ weaverId: unknown; orgId: unknown } | null>();
+  const product = await Product.findById(id)
+    .select("weaverId orgId passport.frozen authenticity.claimedByConsumer")
+    .lean<{ weaverId: unknown; orgId: unknown; passport?: { frozen?: boolean }; authenticity?: { claimedByConsumer?: boolean } } | null>();
   if (!product) return NextResponse.json({ title: "Not found", status: 404 }, { status: 404 });
   const owns =
     session.role === "ADMIN" ||
     (session.role === "WEAVER" && String(product.weaverId) === session.weaverId) ||
     (session.role === "COOP_OFFICER" && String(product.orgId) === session.orgId);
   if (!owns) return NextResponse.json({ title: "Forbidden", status: 403 }, { status: 403 });
+  if (product.passport?.frozen || product.authenticity?.claimedByConsumer) {
+    return NextResponse.json({ title: "Record is sealed", detail: "This piece can no longer be edited.", status: 409 }, { status: 409 });
+  }
 
   const b = await req.json().catch(() => ({}));
   if (!mongoose.isValidObjectId(b.lotObjectId)) return NextResponse.json({ title: "Choose a material lot", status: 400 }, { status: 400 });

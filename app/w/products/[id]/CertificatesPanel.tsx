@@ -14,7 +14,7 @@ const TYPES = [
 
 type Cert = { type: string; number?: string; issuedBy?: string };
 
-export default function CertificatesPanel({ productId, certificates }: { productId: string; certificates: Cert[] }) {
+export default function CertificatesPanel({ productId, certificates, frozen = false }: { productId: string; certificates: Cert[]; frozen?: boolean }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [f, setF] = useState({ type: "SILK_MARK", number: "", issuedBy: "", issuedAt: "", validUntil: "" });
@@ -48,7 +48,7 @@ export default function CertificatesPanel({ productId, certificates }: { product
     <div className="card p-4 sm:p-5">
       <div className="flex items-center justify-between gap-3">
         <h2 className="font-bold text-maroon-900">Certificates</h2>
-        {!open && <button onClick={() => setOpen(true)} className="btn-secondary">+ Add</button>}
+        {!open && !frozen && <button onClick={() => setOpen(true)} className="btn-secondary">+ Add</button>}
       </div>
 
       {certificates.length > 0 ? (

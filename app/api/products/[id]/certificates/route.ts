@@ -21,6 +21,9 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const owns =
     session.role !== "WEAVER" || String(product.weaverId) === session.weaverId;
   if (!owns) return NextResponse.json({ title: "Forbidden", status: 403 }, { status: 403 });
+  if (product.passport?.frozen || product.authenticity?.claimedByConsumer) {
+    return NextResponse.json({ title: "Record is sealed", detail: "This piece can no longer be edited.", status: 409 }, { status: 409 });
+  }
 
   const b = await req.json().catch(() => ({}));
   const type = String(b.type || "");

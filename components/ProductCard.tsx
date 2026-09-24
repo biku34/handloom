@@ -11,6 +11,7 @@ export default function ProductCard({ p, priority = false }: { p: CatalogProduct
   const img = mediaUrl(p.media?.primaryAssetId) || mediaUrl(p.media?.onLoomAssetId);
   const avatar = mediaUrl(w?.profile?.photoAssetId);
   const flagged = p.status === "FLAGGED" || p.authenticity?.flagged;
+  const claimed = !!p.authenticity?.claimedByConsumer;
   const price = p.item?.priceRange || {};
   const priceLabel = price.min
     ? price.max && price.max !== price.min
@@ -35,10 +36,10 @@ export default function ProductCard({ p, priority = false }: { p: CatalogProduct
         )}
         <span
           className={`absolute left-2 top-2 inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-bold shadow-sm ${
-            flagged ? "bg-orange-600 text-white" : "bg-leaf-600 text-white"
+            flagged ? "bg-orange-600 text-white" : claimed ? "bg-maroon-800 text-silk-100" : "bg-leaf-600 text-white"
           }`}
         >
-          {flagged ? "Under review" : "✓ Verified"}
+          {flagged ? "Under review" : claimed ? "Claimed" : "✓ Verified"}
         </span>
         {p.item?.giTag?.registered && (
           <span className="absolute right-2 top-2 rounded-full bg-white/95 px-2 py-0.5 text-[10px] font-bold text-maroon-800 shadow-sm">GI</span>

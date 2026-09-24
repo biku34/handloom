@@ -55,6 +55,9 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
   const productPlain = JSON.parse(JSON.stringify(product));
   const status = STATUS[product.status] || { label: nice(product.status), cls: "bg-stone-100 text-stone-700" };
   const frozen = !!product.passport?.frozen;
+  const claimed = !!product.authenticity?.claimedByConsumer;
+  // Claiming a piece locks it just like dispatch does — nothing more can be edited.
+  const locked = frozen || claimed;
   const issued = product.status === "MINTED" || product.status === "FLAGGED";
   const photo = mediaUrl(product.media?.primaryAssetId) || mediaUrl(product.media?.onLoomAssetId);
 
@@ -79,9 +82,9 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
             <span className={`absolute left-3 top-3 rounded-full px-2.5 py-1 text-xs font-bold shadow-sm ${status.cls}`}>
               {issued ? "✓ " : ""}{status.label}
             </span>
-            {frozen && (
+            {locked && (
               <span className="absolute right-3 top-3 inline-flex items-center gap-1 rounded-full bg-white/95 px-2.5 py-1 text-xs font-bold text-maroon-800 shadow-sm">
-                <Icon name="seal" className="h-3.5 w-3.5" strokeWidth={2} /> Sealed
+                <Icon name="seal" className="h-3.5 w-3.5" strokeWidth={2} /> {claimed ? "Claimed" : "Sealed"}
               </span>
             )}
           </div>
@@ -110,7 +113,7 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
             <Stat n={product.authenticity?.claimedByConsumer ? "Yes" : "Not yet"} label="Found a home" />
           </div>
 
-          <ProductActions productId={String(product._id)} status={product.status} frozen={frozen} />
+          <ProductActions productId={String(product._id)} status={product.status} frozen={locked} />
 
           {issued && product.passportId && (
             <div className="flex items-center gap-4 rounded-2xl bg-white p-4 ring-1 ring-silk-200">
@@ -150,10 +153,11 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
 
         {/* ── Details, certificates, journey, materials ── */}
         <div className="min-w-0 space-y-4 lg:col-start-1">
-          <EnrichForm productId={String(product._id)} product={productPlain} frozen={frozen} />
+          <EnrichForm productId={String(product._id)} product={productPlain} frozen={locked} />
 
           <CertificatesPanel
             productId={String(product._id)}
+            frozen={locked}
             certificates={certs.map((c) => ({ type: c.type, number: c.number, issuedBy: c.issuedBy }))}
           />
 
@@ -181,7 +185,7 @@ export default async function WeaverProductPage({ params }: { params: Promise<{ 
 
           <MaterialsPanel
             productId={String(product._id)}
-            frozen={frozen}
+            frozen={locked}
             linked={(product.materials || []).map((m: Record<string, any>) => ({
               lotIdLabel: m.lotIdLabel,
               type: m.type,

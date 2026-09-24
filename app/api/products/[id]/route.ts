@@ -32,9 +32,15 @@ export async function PATCH(req: NextRequest, ctx: { params: Promise<{ id: strin
   const { id } = await ctx.params;
   const product = await loadOwned(id, session);
   if (!product) return NextResponse.json({ title: "Not found", status: 404 }, { status: 404 });
-  if (product.passport?.frozen) {
+  if (product.passport?.frozen || product.authenticity?.claimedByConsumer) {
     return NextResponse.json(
-      { title: "Record is sealed", detail: "This passport was frozen at dispatch; its record can no longer be edited.", status: 409 },
+      {
+        title: "Record is sealed",
+        detail: product.authenticity?.claimedByConsumer
+          ? "This piece has been claimed by its owner; its record can no longer be edited."
+          : "This passport was frozen at dispatch; its record can no longer be edited.",
+        status: 409,
+      },
       { status: 409 }
     );
   }

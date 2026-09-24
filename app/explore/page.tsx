@@ -12,7 +12,7 @@ const CATEGORY_LABEL: Record<string, string> = {
   FABRIC: "Fabric", DUPATTA: "Dupattas", TOWEL: "Towels", OTHER: "Other",
 };
 
-type Params = { craft?: string; category?: string; q?: string };
+type Params = { craft?: string; category?: string; q?: string; claimed?: string };
 
 function hrefWith(base: Params, key: keyof Params, value?: string) {
   const next: Params = { ...base };
@@ -54,11 +54,12 @@ function SideLink({ label, href, on }: { label: string; href: string; on: boolea
 }
 
 export default async function ExplorePage({ searchParams }: { searchParams: Promise<Params> }) {
-  const { craft, category, q: rawQ } = await searchParams;
+  const { craft, category, q: rawQ, claimed } = await searchParams;
   const q = rawQ?.trim() || undefined;
+  const showClaimed = claimed === "1";
   let catalog: Awaited<ReturnType<typeof getCatalog>> | null = null;
   try {
-    catalog = await getCatalog(craft, category, q);
+    catalog = await getCatalog(craft, category, q, showClaimed);
   } catch (e) {
     // DB unreachable — show a friendly notice instead of crashing (P6).
     console.error("[explore] catalog query failed:", e);
@@ -76,7 +77,7 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
     );
   }
   const { products, crafts, categories, total, makers } = catalog;
-  const active: Params = { craft, category, q };
+  const active: Params = { craft, category, q, claimed: showClaimed ? "1" : undefined };
   const filtered = Boolean(craft || category || q);
 
   return (
@@ -93,14 +94,38 @@ export default async function ExplorePage({ searchParams }: { searchParams: Prom
             <p className="mt-0.5 text-sm text-stone-500">
               {filtered
                 ? `${products.length} ${products.length === 1 ? "piece" : "pieces"} found`
-                : `${total.toLocaleString("en-IN")} verified pieces, each with a face and a story`}
+                : showClaimed
+                ? `${total.toLocaleString("en-IN")} pieces, each with a face and a story`
+                : `${total.toLocaleString("en-IN")} pieces available now`}
             </p>
           </div>
           {filtered && (
-            <Link href="/explore" className="shrink-0 rounded-full bg-silk-100 px-3 py-1.5 text-sm font-semibold text-maroon-800 hover:bg-silk-200">
+            <Link href={hrefWith({ claimed: active.claimed }, "craft")} className="shrink-0 rounded-full bg-silk-100 px-3 py-1.5 text-sm font-semibold text-maroon-800 hover:bg-silk-200">
               Clear ✕
             </Link>
           )}
+        </div>
+
+        {/* Available vs. include-claimed toggle */}
+        <div className="mt-4 inline-flex rounded-full bg-silk-100 p-0.5 text-sm ring-1 ring-silk-200">
+          <Link
+            href={hrefWith(active, "claimed")}
+            scroll={false}
+            className={`rounded-full px-4 py-1.5 font-semibold transition-colors ${
+              !showClaimed ? "bg-white text-maroon-900 shadow-sm ring-1 ring-silk-200" : "text-stone-500 hover:text-maroon-800"
+            }`}
+          >
+            Available
+          </Link>
+          <Link
+            href={hrefWith(active, "claimed", "1")}
+            scroll={false}
+            className={`rounded-full px-4 py-1.5 font-semibold transition-colors ${
+              showClaimed ? "bg-white text-maroon-900 shadow-sm ring-1 ring-silk-200" : "text-stone-500 hover:text-maroon-800"
+            }`}
+          >
+            Include claimed
+          </Link>
         </div>
 
         {/* phones & tablets: swipeable filter chips */}

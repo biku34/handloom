@@ -16,6 +16,20 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   const product = await Product.findById(id);
   if (!product) return NextResponse.json({ title: "Not found", status: 404 }, { status: 404 });
 
+  // Once sealed (dispatch) or claimed by its owner, the journey is locked.
+  if (product.passport?.frozen || product.authenticity?.claimedByConsumer) {
+    return NextResponse.json(
+      {
+        title: "Journey is locked",
+        detail: product.authenticity?.claimedByConsumer
+          ? "This piece has been claimed by its owner — its journey can no longer be changed."
+          : "This record was sealed at dispatch — its journey can no longer be changed.",
+        status: 409,
+      },
+      { status: 409 }
+    );
+  }
+
   const body = await req.json().catch(() => ({}));
   const { eventType, note, location, occurredAt, mediaAssetIds } = body;
   if (!PROVENANCE_EVENT_TYPES.includes(eventType)) {
