@@ -55,7 +55,7 @@ export default async function SiteHeader() {
         <div className="mx-auto max-w-6xl px-4">
           <div className="flex h-16 items-center gap-4">
             <Link href="/" aria-label="SUTRA home" className="shrink-0">
-              <Logo tagline />
+              <Logo />
             </Link>
 
             <SearchBar className="hidden md:block flex-1 max-w-xl mx-auto" />

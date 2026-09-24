@@ -1,3 +1,9 @@
+import { Playfair_Display } from "next/font/google";
+
+// Wordmark face: an elegant serif italic — a slight cursive lean without
+// becoming a script font. Self-hosted by next/font (no layout shift).
+const wordmark = Playfair_Display({ subsets: ["latin"], weight: ["600"], style: ["italic"], display: "swap" });
+
 /**
  * SUTRA brand mark — a single gold thread drawn as an "S", finished with a
  * needle eye. Built from plain paths (no font dependency) so it stays crisp
@@ -19,17 +25,14 @@ export function LogoMark({ className = "h-9 w-9" }: { className?: string }) {
   );
 }
 
-export default function Logo({ tagline = false, light = true }: { tagline?: boolean; light?: boolean }) {
+export default function Logo({ light = true }: { light?: boolean }) {
   return (
     <span className="flex items-center gap-2.5">
       <LogoMark className="h-9 w-9 shrink-0 rounded-[10px] ring-1 ring-silk-300/40" />
-      <span className="flex flex-col leading-none">
-        <span className={`font-display text-[22px] font-bold tracking-[0.12em] ${light ? "text-silk-100" : "text-maroon-900"}`}>SUTRA</span>
-        {tagline && (
-          <span className={`mt-1 text-[10px] font-medium tracking-wide ${light ? "text-silk-300/80" : "text-silk-700"}`}>
-            Verified handloom
-          </span>
-        )}
+      <span
+        className={`${wordmark.className} text-[28px] leading-none tracking-[0.07em] ${light ? "text-silk-100" : "text-maroon-900"}`}
+      >
+        SUTRA
       </span>
     </span>
   );
