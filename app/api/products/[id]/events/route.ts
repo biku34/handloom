@@ -17,9 +17,17 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
   if (!product) return NextResponse.json({ title: "Not found", status: 404 }, { status: 404 });
 
   const body = await req.json().catch(() => ({}));
-  const { eventType, note, location, occurredAt } = body;
+  const { eventType, note, location, occurredAt, mediaAssetIds } = body;
   if (!PROVENANCE_EVENT_TYPES.includes(eventType)) {
     return NextResponse.json({ title: `eventType must be one of: ${PROVENANCE_EVENT_TYPES.join(", ")}`, status: 400 }, { status: 400 });
+  }
+
+  // Every journey step must carry photo evidence — 1 or 2 images.
+  const media = Array.isArray(mediaAssetIds)
+    ? mediaAssetIds.filter((m) => mongoose.isValidObjectId(m)).map(String)
+    : [];
+  if (media.length < 1 || media.length > 2) {
+    return NextResponse.json({ title: "Add 1 or 2 photos for this step", status: 400 }, { status: 400 });
   }
 
   const event = await recordProvenanceEvent({
@@ -31,6 +39,7 @@ export async function POST(req: NextRequest, ctx: { params: Promise<{ id: string
     actorName: session.name,
     note: note ? String(note).slice(0, 500) : undefined,
     location: location ? String(location).slice(0, 120) : undefined,
+    mediaAssetIds: media,
   });
 
   // Freeze on dispatch (FR-C6 AC-1): DISPATCHED seals the record automatically.

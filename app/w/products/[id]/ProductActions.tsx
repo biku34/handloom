@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 
 const EVENT_OPTIONS = [
@@ -18,6 +18,34 @@ export default function ProductActions({ productId, status, frozen }: { productI
   const [secret, setSecret] = useState<string | null>(null);
   const [eventType, setEventType] = useState("WEAVING_COMPLETED");
   const [note, setNote] = useState("");
+  const [photos, setPhotos] = useState<{ file: File; url: string }[]>([]);
+  const fileRef = useRef<HTMLInputElement>(null);
+
+  function addFiles(list: FileList | null) {
+    const imgs = Array.from(list || [])
+      .filter((f) => f.type.startsWith("image/"))
+      .map((f) => ({ file: f, url: URL.createObjectURL(f) }));
+    setPhotos((prev) => [...prev, ...imgs].slice(0, 2));
+  }
+  function removePhoto(i: number) {
+    setPhotos((prev) => {
+      const gone = prev[i];
+      if (gone) URL.revokeObjectURL(gone.url);
+      return prev.filter((_, idx) => idx !== i);
+    });
+  }
+
+  async function uploadPhoto(file: File): Promise<string> {
+    const fd = new FormData();
+    fd.append("file", file, file.name);
+    fd.append("kind", "IMAGE");
+    fd.append("purpose", "JOURNEY_STEP");
+    const res = await fetch("/api/media/upload", { method: "POST", body: fd });
+    if (res.status === 413) throw new Error("That photo is too large — try a smaller one.");
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.title || "Photo upload failed");
+    return data.assetId as string;
+  }
 
   async function mint() {
     setBusy(true);
@@ -37,17 +65,25 @@ export default function ProductActions({ productId, status, frozen }: { productI
 
   async function recordEvent(e: React.FormEvent) {
     e.preventDefault();
+    if (photos.length < 1) {
+      setError("Add at least one photo of this step.");
+      return;
+    }
     setBusy(true);
     setError(null);
     try {
+      const mediaAssetIds: string[] = [];
+      for (const p of photos) mediaAssetIds.push(await uploadPhoto(p.file));
       const res = await fetch(`/api/products/${productId}/events`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ eventType, note }),
+        body: JSON.stringify({ eventType, note, mediaAssetIds }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.title || "Could not record event");
       setNote("");
+      photos.forEach((p) => URL.revokeObjectURL(p.url));
+      setPhotos([]);
       router.refresh();
     } catch (err) {
       setError((err as Error).message);
@@ -105,7 +141,54 @@ export default function ProductActions({ productId, status, frozen }: { productI
             </p>
           )}
           <input className="input" placeholder="Add a note (optional)" value={note} onChange={(e) => setNote(e.target.value)} />
-          <button className="btn-primary btn-lg w-full" disabled={busy}>{busy ? "Recording…" : "Add to the journey"}</button>
+
+          {/* photos — every step must show 1–2 photos */}
+          <div>
+            <p className="label">
+              Photos of this step <span className="font-normal text-stone-400">(1–2, required)</span>
+            </p>
+            <div className="mt-1 flex gap-2">
+              {photos.map((p, i) => (
+                <div key={p.url} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl ring-1 ring-silk-300">
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.url} alt={`Step photo ${i + 1}`} className="h-full w-full object-cover" />
+                  <button
+                    type="button"
+                    onClick={() => removePhoto(i)}
+                    aria-label="Remove photo"
+                    className="absolute right-1 top-1 flex h-5 w-5 items-center justify-center rounded-full bg-black/60 text-xs leading-none text-white"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              {photos.length < 2 && (
+                <button
+                  type="button"
+                  onClick={() => fileRef.current?.click()}
+                  className="flex h-20 w-20 shrink-0 flex-col items-center justify-center gap-1 rounded-xl border-2 border-dashed border-silk-300 text-stone-400 transition-colors hover:border-maroon-600 hover:text-maroon-700"
+                >
+                  <span className="text-xl leading-none">＋</span>
+                  <span className="text-[10px] font-semibold">Add photo</span>
+                </button>
+              )}
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept="image/*"
+              multiple
+              className="hidden"
+              onChange={(e) => {
+                addFiles(e.target.files);
+                e.target.value = "";
+              }}
+            />
+          </div>
+
+          <button className="btn-primary btn-lg w-full" disabled={busy || photos.length < 1}>
+            {busy ? "Recording…" : "Add to the journey"}
+          </button>
         </form>
       )}
       {frozen && (

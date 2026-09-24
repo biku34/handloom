@@ -47,7 +47,7 @@ export default async function JourneyPage({ params }: { params: Promise<{ passpo
         <p className="mt-1 text-sm text-stone-600">{view.product.name}</p>
 
       <ol className="mt-6 relative border-l-2 border-silk-300 pl-6 space-y-7">
-        {view.journey.steps.map((step: { eventType: string; occurredAt: string | Date; recordedAt?: string | Date; actor?: string; actorType?: string; note?: string; location?: string; ledgerSeq?: number | null; chain?: { status: string; network?: string; txHash?: string | null; blockNumber?: number | null; explorerUrl?: string | null } | null }, i: number) => {
+        {view.journey.steps.map((step: { eventType: string; occurredAt: string | Date; recordedAt?: string | Date; actor?: string; actorType?: string; note?: string; location?: string; media?: (string | null)[]; ledgerSeq?: number | null; chain?: { status: string; network?: string; txHash?: string | null; blockNumber?: number | null; explorerUrl?: string | null } | null }, i: number) => {
           const meta = EVENT_META[step.eventType] ?? { icon: "•", label: step.eventType };
           const occurred = new Date(step.occurredAt);
           const recorded = step.recordedAt ? new Date(step.recordedAt) : null;
@@ -70,6 +70,23 @@ export default async function JourneyPage({ params }: { params: Promise<{ passpo
                   </p>
                 )}
                 {step.note && <p className="mt-2 text-sm text-stone-700">{step.note}</p>}
+                {(() => {
+                  const imgs = (step.media || []).filter(Boolean) as string[];
+                  if (imgs.length === 0) return null;
+                  return (
+                    <div className={`mt-3 grid gap-2 ${imgs.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+                      {imgs.map((src, mi) => (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          key={mi}
+                          src={src}
+                          alt={`${meta.label} — photo ${mi + 1}`}
+                          className="w-full aspect-[4/3] rounded-xl object-cover ring-1 ring-silk-200 bg-silk-100"
+                        />
+                      ))}
+                    </div>
+                  );
+                })()}
                 {gapHours > 24 && (
                   <p className="mt-2 text-xs text-stone-400 italic">
                     Recorded {Math.round(gapHours / 24)} day(s) after it happened — weaving villages often have limited network. Both times are shown for honesty.
