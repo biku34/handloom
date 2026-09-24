@@ -175,7 +175,7 @@ html.pwa #sutra-splash {
   box-shadow: 0 12px 40px -12px rgba(0, 0, 0, 0.6);
 }
 .sutra-splash__word {
-  margin-top: 22px;
+  margin-top: 0; /* no mark above it any more — wordmark sits dead centre */
   font-family: var(--font-serif-display);
   font-size: 40px;
   font-weight: 700;

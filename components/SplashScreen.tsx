@@ -52,18 +52,9 @@ export default function SplashScreen() {
 
   return (
     <div id="sutra-splash" aria-hidden="true" className={phase === "hiding" ? "is-hiding" : undefined}>
+      {/* Wordmark only — no S mark — so it continues seamlessly from the OS
+          launch screen (manifest splash icon is the same SUTRA wordmark). */}
       <div className="sutra-splash__inner">
-        <svg viewBox="0 0 64 64" className="sutra-splash__mark" aria-hidden="true">
-          <rect width="64" height="64" rx="16" fill="#40101a" />
-          <path
-            d="M44.5 19.5C41 14 23 13 22.5 23.5 22 32.5 42 30.5 42 41.5 42 51.5 24 52 19.5 45"
-            fill="none"
-            stroke="#e5c383"
-            strokeWidth="7"
-            strokeLinecap="round"
-          />
-          <circle cx="44.5" cy="19.5" r="2" fill="#40101a" />
-        </svg>
         <div className="sutra-splash__word">SUTRA</div>
         <div className="sutra-splash__tag">Every thread has a story</div>
       </div>
