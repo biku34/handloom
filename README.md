@@ -4,7 +4,12 @@
 Scan the tag, meet the weaver, verify the craft — backed by in-person verification and a
 tamper-evident record anchored on a public blockchain.
 
-🔗 **Live pilot:** [handloom-gray.vercel.app](https://handloom-gray.vercel.app)
+🔗 **Live pilot:** [handloom-gray.vercel.app](https://handloom-gray.vercel.app) ·
+▶️ **Interactive product journey:** [handloom-gray.vercel.app/how-it-works](https://handloom-gray.vercel.app/how-it-works)
+
+<a href="https://handloom-gray.vercel.app/how-it-works">
+  <img src="public/readme/product-journey.svg" alt="The SUTRA product journey: onboard, verify, register, passport, journey, seal, scan, claim — click to explore interactively" width="100%">
+</a>
 
 ---
 
@@ -45,6 +50,10 @@ shows who wove it, where, how, with what materials, and every step it took from 
    the record** — exactly when the incentive to falsify appears, the record becomes read-only.
 4. **The buyer scans** — no app, no login. In seconds they see a clear verdict, the weaver, the
    materials and the full journey, and can claim the piece as theirs.
+
+> **See it step by step:** the [interactive product journey](https://handloom-gray.vercel.app/how-it-works)
+> walks one saree through all eight stages, with the screen each person sees and the ledger entry
+> written at each step. Autoplay, click, swipe or use the ← → keys.
 
 ## Who it's for
 

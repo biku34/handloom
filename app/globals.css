@@ -96,6 +96,16 @@ main {
   to { transform: none; opacity: 1; }
 }
 
+/* /how-it-works journey explorer */
+@keyframes journeyIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: none; }
+}
+@keyframes journeyTick {
+  from { width: 0; }
+  to { width: 100%; }
+}
+
 /* loading shimmer */
 @keyframes shimmer {
   0% {
