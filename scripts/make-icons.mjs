@@ -18,23 +18,20 @@ const maskable = Buffer.from(
     .replace(/<\/svg>\s*$/, "")}</g></svg>`
 );
 
-// Launch-screen icon: the SUTRA wordmark (not the S mark) on the maroon
+// Launch-screen icon: a plain maroon square, the same colour as the manifest
 // background_color. Android draws its native launch screen from the largest
-// "any" manifest icon, while the home-screen icon comes from the maskable one —
-// so the app opens on "SUTRA" but keeps the S on the home screen. The artwork
-// stays inside the central circle Android 12+ crops launch icons to.
-const splash = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" fill="#40101a"/>
-  <text x="256" y="276" text-anchor="middle" font-family="Georgia" font-weight="bold" font-size="66" letter-spacing="14" fill="#f8eeda">SUTRA</text>
-  <rect x="211" y="304" width="90" height="4" rx="2" fill="#e5c383"/>
-</svg>`);
+// "any" manifest icon, so this makes that screen an empty maroon field — the
+// app then paints the SUTRA wordmark splash on top, and no S logo is shown on
+// launch. (The 192px "any" icon stays the S for small UI such as the install
+// prompt, and the home-screen icon comes from the maskable S.)
+const launch = Buffer.from(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" fill="#40101a"/></svg>`);
 
 const out = [
   ["public/apple-touch-icon.png", square, 180],
   ["public/icon-192.png", svg, 192],
   ["public/icon-512.png", svg, 512],
   ["public/icon-maskable-512.png", maskable, 512],
-  ["public/splash-512.png", splash, 512],
+  ["public/launch-512.png", launch, 512],
 ];
 for (const [file, src, size] of out) {
   await sharp(src, { density: 600 }).resize(size, size).png().toFile(file);
